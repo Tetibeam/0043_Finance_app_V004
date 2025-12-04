@@ -1,0 +1,15 @@
+numpy==2.3.4
+numpy-financial==1.0.0
+pandas==2.3.3
+plotly==6.4.0
+MonthDelta==0.9.1
+Flask==3.1.2
+Jinja2==3.1.6
+requests==2.32.5
+PyYAML==6.0.3
+pyarrow==22.0.0
+pdfplumber==0.11.8
+Cython>=3.0.0
+psycopg2-binary==2.9.10
+SQLAlchemy==2.0.36
+python-dotenv==1.0.1

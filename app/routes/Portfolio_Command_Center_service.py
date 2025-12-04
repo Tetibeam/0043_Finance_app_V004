@@ -1,0 +1,368 @@
+from app.utils.data_loader import (
+    get_latest_date,
+    query_table_aggregated,
+)
+from typing import Dict, Any
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
+import json
+
+def _read_table_from_db():
+    # 12か月前の月初を計算
+    latest_date = get_latest_date()
+    start_date = max(
+        (latest_date - pd.DateOffset(months=12)).replace(day=1),
+        pd.to_datetime("2024-10-01")
+    )
+    df_asset_profit = query_table_aggregated(
+        table_name="asset_profit_detail",
+        aggregates={
+            "資産額": "SUM",
+            "トータルリターン": "SUM"
+        },
+        group_by=["date"],
+        start_date=start_date,
+        end_date=latest_date,
+        filters=None,
+        order_by=["date"]
+    ).rename(columns={"資産額": "実績_資産額", "トータルリターン": "実績_トータルリターン"}).set_index("date")
+    df_balance = query_table_aggregated(
+        table_name="balance_detail",
+        aggregates={
+            "金額": "SUM",
+            "目標": "SUM"
+        },
+        group_by=["date", "収支タイプ", "収支カテゴリー"],
+        start_date=start_date,
+        end_date=latest_date,
+        filters=None,
+        order_by=["date"]
+    ).set_index("date")
+    df_target = query_table_aggregated(
+        table_name="target_asset_profit",
+        aggregates={
+            "資産額": "SUM",
+            "トータルリターン": "SUM"
+        },
+        group_by=["date"],
+        start_date=start_date,
+        end_date=latest_date,
+        filters=None,
+        order_by=["date"]
+    ).rename(columns={"資産額": "目標_資産額", "トータルリターン": "目標_トータルリターン"}).set_index("date")
+
+    df = pd.concat([df_asset_profit, df_balance, df_target], axis=1)
+    #print(df)
+    return df
+
+def _build_summary(df_collection) -> Dict[str, float]:
+    latest = get_latest_date()
+    total_assets = int(df_collection.loc[latest, "実績_資産額"].iloc[0]) 
+    total_target_assets = int(df_collection.loc[latest, "目標_資産額"].iloc[0])
+    fire_progress = int(df_collection.loc[latest, "実績_資産額"].iloc[0] / df_collection.loc[latest, "目標_資産額"].iloc[0] * 100)
+    difference = int(total_assets - total_target_assets)
+    
+    latest = latest.strftime("%Y/%m/%d")
+    return {
+        "latest_date": latest,
+        "fire_progress": fire_progress,
+        "total_assets": total_assets,
+        "total_target_assets": total_target_assets,
+        "difference": difference,
+    }
+
+def _make_graph_template():
+    theme = go.layout.Template(
+        layout=go.Layout(
+            autosize=True, margin=dict(l=0,r=10,t=0,b=30),
+            paper_bgcolor="#111111",
+            plot_bgcolor="#111111",
+            font=dict(family="Inter, Roboto", size=14, color="#DDDDDD"),
+
+            xaxis=dict(
+                title=dict(font_size=12),
+                title_standoff=16,
+                tickfont=dict(size=10),
+                showgrid=True,
+                gridcolor="#444444",
+                zeroline=False,
+                color="#cccccc"
+            ),
+            
+            yaxis=dict(
+                title=dict(font_size=12),
+                title_standoff=16,
+                separatethousands=False,
+                tickfont=dict(size=10),
+                showgrid=True,
+                gridcolor="#444444",
+                zeroline=False,
+                color="#cccccc"
+            ),
+            
+            legend=dict(
+                visible=True,
+                orientation="h",
+                yanchor="top",
+                y=1.2,
+                xanchor="right",
+                x=1,
+            ),
+            colorway=["#4E79A7", "#F28E2B"],
+            
+        )
+    )
+    pio.templates["dark_dashboard"] = theme
+    pio.templates.default = "plotly_dark+dark_dashboard"
+
+def _graph_individual_setting(fig, x_title, x_tickformat, y_title, y_tickprefix, y_tickformat):
+    fig.update_xaxes(
+        title = dict(text = x_title),
+        tickformat=x_tickformat
+    )
+    fig.update_yaxes(
+        title = dict(text = y_title),
+        tickprefix=y_tickprefix,
+        tickformat=y_tickformat,
+    )
+    return fig
+
+def _build_progress_rate(df_collection):
+    # データフレーム
+    df = pd.DataFrame(columns=["生値", "スムージング"])
+    df["生値"] = df_collection["実績_資産額"] / df_collection["目標_資産額"]
+    df["スムージング"] = df["生値"].rolling(window=30).mean()
+    df.fillna(1, inplace=True)
+    print(df)
+    # PXでグラフ生成
+    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    y1_values = df["生値"].astype(float).tolist()
+    y2_values = df["スムージング"].astype(float).tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y1_values, mode="lines", name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines", name="Smoothing",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
+    ))
+    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Progress Rate", "", "%")
+    # metaでID付与
+    fig.update_layout(meta={"id": "progress_rate"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    return json_str
+
+def _build_saving_rate(df_collection):
+    # データフレーム作成
+    df_collection_prev = df_collection.loc[: df_collection.index.max() - pd.offsets.MonthEnd(1)]
+    df = pd.DataFrame(columns=["実績_貯蓄率", "目標_貯蓄率"])
+    df["実績_貯蓄率"] = (
+        (
+            df_collection_prev.resample("ME")["金額"].sum() +
+            df_collection_prev.resample("ME")["実績_トータルリターン"].last().diff()
+        )/
+        df_collection_prev[df_collection_prev["収支カテゴリー"] == "収入"].resample("ME")["金額"].sum()
+    )
+    df["目標_貯蓄率"] = (
+        (
+            df_collection_prev.resample("ME")["目標"].sum() +
+            df_collection_prev.resample("ME")["目標_トータルリターン"].last().diff()
+        )/
+        df_collection_prev[df_collection_prev["収支カテゴリー"] == "収入"].resample("ME")["目標"].sum()
+    )
+    df.dropna(inplace=True)
+    #print(df)
+    # PXでグラフ生成
+    x_values = df.index.strftime("%Y-%m").tolist()
+    y1_values = df["実績_貯蓄率"].astype(float).tolist()
+    y2_values = df["目標_貯蓄率"].astype(float).tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=x_values, y=y1_values, name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines+markers", name="Target",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
+    ))
+    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Saving Rate", "", ".0%")
+    # metaでID付与
+    fig.update_layout(meta={"id": "saving_rate"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    return json_str
+
+def _build_total_assets(df_collection):
+    # データフレーム生成
+    df = df_collection[["実績_資産額", "目標_資産額"]]
+    #print(df)
+    # PXでグラフ生成
+    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    y1_values = df["実績_資産額"].astype(int).tolist()
+    y2_values = df["目標_資産額"].astype(int).tolist()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y1_values, mode="lines", name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}+<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines", name="Target",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}+<extra></extra>'
+    ))
+    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Net Assets", "¥", "")
+    # metaでID付与
+    fig.update_layout(meta={"id": "total_assets"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    return json_str
+
+def _build_total_returns(df_collection):
+    # データフレーム生成
+    df = df_collection[["実績_トータルリターン", "目標_トータルリターン"]]
+    #print(df)
+    # PXでグラフ生成
+    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    y1_values = df["実績_トータルリターン"].astype(int).tolist()
+    y2_values = df["目標_トータルリターン"].astype(int).tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y1_values, mode="lines", name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines", name="Target",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+    fig = _graph_individual_setting(fig,"date", "%Y-%m-%d", "Total Returns", "¥", "")
+
+    # metaでID付与
+    fig.update_layout(meta={"id": "total_returns"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    #print(json_str)
+    return json_str
+
+def _build_general_balance(df_collection):
+    df = pd.DataFrame(columns=["実績_一般収支", "目標_一般収支"])
+    df["実績_一般収支"] = (
+        df_collection[df_collection["収支タイプ"] == "一般収支"].resample("ME")["金額"].sum()
+    )
+    df["目標_一般収支"] = (
+        df_collection[df_collection["収支タイプ"] == "一般収支"].resample("ME")["目標"].sum()
+    )
+
+    x_values = df.index.strftime("%Y-%m").tolist()
+    y1_values = df["実績_一般収支"].astype(int).tolist()
+    y2_values = df["目標_一般収支"].astype(int).tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=x_values, y=y1_values, name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines+markers", name="Target",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+
+    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Balance", "¥", "")
+    # metaでID付与
+    fig.update_layout(meta={"id": "general_balance"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    return json_str
+
+def _build_special_balance(df_collection):
+    df = pd.DataFrame(columns=["実績_特別収支", "目標_特別収支"])
+    df["実績_特別収支"] = (
+        df_collection [df_collection["収支タイプ"] == "特別収支"].resample("ME")["金額"].sum().cumsum()
+    )
+    df["目標_特別収支"] = (
+        df_collection [df_collection["収支タイプ"] == "特別収支"].resample("ME")["目標"].sum().cumsum()
+    )
+    
+    x_values = df.index.strftime("%Y-%m").tolist()
+    y1_values = df["実績_特別収支"].astype(int).tolist()
+    y2_values = df["目標_特別収支"].astype(int).tolist()
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y1_values, mode="lines+markers", fill="tozeroy", name="Actual",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=y2_values, mode="lines+markers", name="Target",
+        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
+    ))
+
+    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Cash - Cumulative", "¥", "")
+    # metaでID付与
+    fig.update_layout(meta={"id": "special_balance"})
+
+    fig_dict = fig.to_dict()
+    json_str = json.dumps(fig_dict)
+    #fig.show()
+    return json_str
+
+def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
+    # DBから必要データを読み込みます
+    df_collection = _read_table_from_db()
+    #print(df_target)
+
+    result = {"ok":True, "summary": {}, "graphs": {}}
+
+    if include_summary:
+        result["summary"] = _build_summary(df_collection)
+        #print(result)
+    if include_graphs:
+        _make_graph_template()
+
+        result["graphs"] = {
+            "progress_rate": _build_progress_rate(df_collection),
+            "saving_rate": _build_saving_rate(df_collection),
+            "assets": _build_total_assets(df_collection),
+            "returns": _build_total_returns(df_collection),
+            "general_balance": _build_general_balance(df_collection),
+            "special_balance": _build_special_balance(df_collection)
+        }
+    return result
+
+if __name__ == "__main__":
+    import os
+    base_dir = os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
+    )
+    # DBマネージャーの初期化
+    from app.utils.db_manager import init_db
+    init_db(base_dir)
+    df = _read_table_from_db()
+    print(_build_summary(df))
+    _build_progress_rate(df)
+    _build_saving_rate(df)
+    _build_total_assets(df)
+    _build_total_returns(df)
+    _build_general_balance(df)
+    _build_special_balance(df)
+
+
+

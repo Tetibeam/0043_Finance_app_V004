@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Finance App{% endblock %}
+
+{% block head_extra %}
+<style>
+.main {
+    text-align: center;
+    padding: 2vh;
+}
+.graph-title {
+    font-size: 4vh;
+    margin-bottom: 2vh;
+}
+.graph-container {
+    border-radius: 8px;
+    padding: 1vh;
+    width: 90%;
+    height: 80vh;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}
+
+{% block sidebar_extra %}
+<a href="javascript:history.back()">← 戻る</a>
+{% endblock %}
+
+{% block content %}
+<h2 class="graph-title">{{ title }}</h2>
+<div class="graph-container">
+  {{ fig_html|safe }}
+</div>
+{% endblock %}

@@ -15,8 +15,8 @@ def index():
         "service": "Portfolio_Command_Center",
         "version": "1.0",
         "endpoints": {
-            "graphs": "/api/Portfolio_Command_Center/graphs",
-            "summary": "/api/Portfolio_Command_Center/summary"
+            "graphs": "/api/Allocation_Matrix/graphs",
+            "summary": "/api/Allocation_Matrix/summary"
         }
     }
     return jsonify(payload)

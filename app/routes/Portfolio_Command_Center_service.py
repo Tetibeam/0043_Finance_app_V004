@@ -60,18 +60,18 @@ def _read_table_from_db():
 
 def _build_summary(df_collection) -> Dict[str, float]:
     latest = get_latest_date()
-    total_assets = int(df_collection.loc[latest, "実績_資産額"].iloc[0]) 
-    total_target_assets = int(df_collection.loc[latest, "目標_資産額"].iloc[0])
-    fire_progress = int(df_collection.loc[latest, "実績_資産額"].iloc[0] / df_collection.loc[latest, "目標_資産額"].iloc[0] * 100)
-    difference = int(total_assets - total_target_assets)
+    total_assets = df_collection.loc[latest, "実績_資産額"].iloc[0]
+    total_target_assets = df_collection.loc[latest, "目標_資産額"].iloc[0]
+    fire_progress = df_collection.loc[latest, "実績_資産額"].iloc[0] / df_collection.loc[latest, "目標_資産額"].iloc[0]
+    difference = total_assets - total_target_assets
     
     latest = latest.strftime("%Y/%m/%d")
     return {
         "latest_date": latest,
-        "fire_progress": fire_progress,
-        "total_assets": total_assets,
-        "total_target_assets": total_target_assets,
-        "difference": difference,
+        "fire_progress": round(fire_progress*100, 1),
+        "total_assets": round(total_assets, 0),
+        "total_target_assets": round(total_target_assets, 0),
+        "difference": round(difference, 0),
     }
 
 def _make_graph_template():

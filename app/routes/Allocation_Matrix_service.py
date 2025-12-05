@@ -44,15 +44,15 @@ def _build_summary(df_collection) -> Dict[str, float]:
         df[df["資産タイプ"] == "リスク資産"].groupby("date")["資産額"].sum().loc[latest]/
         total_asset
     )
-    aggresive_return_exposure = (
+    aggressive_return_exposure = (
         df[df["資産サブタイプ"].isin(
             ["国内株式", "投資信託", "ソーシャルレンディング", "セキュリティートークン", "暗号資産"]
         )].groupby("date")["資産額"].sum().loc[latest]/
         total_asset
     )
-    emergency_buffer = (int(
+    emergency_buffer = (
         df[df["資産サブタイプ"].isin(["現金", "普通預金/MRF"])].groupby("date")["資産額"].sum().loc[latest]
-    ))
+    )
     debt_exposure_ratio = (
         df[df["資産タイプ"] == "負債"].groupby("date")["資産額"].sum().loc[latest]/
         total_asset*-1
@@ -60,10 +60,10 @@ def _build_summary(df_collection) -> Dict[str, float]:
     
     return {
         "latest_date": latest,
-        "Active Growth Capital": active_growth_capital,
-        "Aggressive Return Exposure": aggresive_return_exposure,
-        "Emergency Buffer": emergency_buffer,
-        "Debt Exposure Ratio": debt_exposure_ratio,
+        "active_growth_capital": round(active_growth_capital*100,1),
+        "aggressive_return_exposure": round(aggressive_return_exposure*100,1),
+        "emergency_buffer": round(emergency_buffer),
+        "debt_exposure_ratio": round(debt_exposure_ratio*100,1),
     }
 
 def _make_graph_template():
@@ -317,24 +317,23 @@ def _build_special_balance(df_collection):
 def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
     # DBから必要データを読み込みます
     df_collection = _read_table_from_db()
-    #print(df_target)
 
     result = {"ok":True, "summary": {}, "graphs": {}}
 
     if include_summary:
         result["summary"] = _build_summary(df_collection)
-        #print(result)
+        
     if include_graphs:
         _make_graph_template()
 
-        result["graphs"] = {
-            "asset_tree_map": _build_asset_tree_map(df_collection),
+        #result["graphs"] = {
+            #"asset_tree_map": _build_asset_tree_map(df_collection),
             #"saving_rate": _build_saving_rate(df_collection),
             #"assets": _build_total_assets(df_collection),
             #"returns": _build_total_returns(df_collection),
             #"general_balance": _build_general_balance(df_collection),
             #"special_balance": _build_special_balance(df_collection)
-        }
+        #}
     return result
 
 if __name__ == "__main__":

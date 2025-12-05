@@ -1,8 +1,11 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import KPIDashboard from './KPIDashboard'
+import KPIAllocationMatrix from './KPIAllocationMatrix'
 
 function Sidebar() {
+  const location = useLocation()
+  
   return (
     <div className="sidebar">
       <h1>💰 Finance App</h1>
@@ -15,7 +18,11 @@ function Sidebar() {
         {/* <Link to="/performance">Investment Performance Lab</Link> */}
       </nav>
 
-      <KPIDashboard />
+      {location.pathname === '/allocation_matrix' ? (
+        <KPIAllocationMatrix />
+      ) : (
+        <KPIDashboard />
+      )}
     </div>
   )
 }

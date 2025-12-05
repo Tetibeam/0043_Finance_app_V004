@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function KPIDashboard() {
+function KPIAllocationMatrix() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -9,7 +9,7 @@ function KPIDashboard() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const response = await axios.get('/api/Portfolio_Command_Center/summary')
+        const response = await axios.get('/api/Allocation_Matrix/summary')
         setSummary(response.data.summary)
         setLoading(false)
       } catch (err) {
@@ -38,32 +38,33 @@ function KPIDashboard() {
         <h3 style={{
           margin: 0,
           fontFamily: "'Montserrat', sans-serif",
-          fontSize: '1.1em',
+          fontSize: '2vh',
           fontWeight: 600,
           letterSpacing: '0.5px',
           color: '#ffffff',
           textTransform: 'uppercase'
-        }}>📊 KPI Command Center</h3>
+        }}>📊 KPI Allocation Matrix</h3>
+        
       </div>
       
       <div className="summary-grid">
         <div>Date:</div>
         <div>{summary.latest_date}</div>
         
-        <div>Fire Progress:</div>
-        <div>{summary.fire_progress.toLocaleString()}%</div>
+        <div>Dynamic Assets:</div>
+        <div>{summary.active_growth_capital.toLocaleString()}%</div>
         
-        <div>Net Worth :</div>
-        <div>¥ {summary.total_assets.toLocaleString()}</div>
+        <div>Aggressive Assets:</div>
+        <div>{summary.aggressive_return_exposure.toLocaleString()}%</div>
         
-        <div>Net Worth Target:</div>
-        <div>¥ {summary.total_target_assets.toLocaleString()}</div>
+        <div>Emergency Buffer:</div>
+        <div>¥ {summary.emergency_buffer.toLocaleString()}</div>
         
-        <div>Net Worth Difference:</div>
-        <div>¥ {summary.difference.toLocaleString()}</div>
+        <div>Debt Exposure:</div>
+        <div>{summary.debt_exposure_ratio.toLocaleString()}%</div>
       </div>
     </div>
   )
 }
 
-export default KPIDashboard
+export default KPIAllocationMatrix

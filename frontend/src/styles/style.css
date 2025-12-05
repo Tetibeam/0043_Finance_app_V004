@@ -18,7 +18,7 @@ body {
 /* サイドバー */
 .sidebar {
   position: fixed;
-  width: 15%;
+  width: 18%;
   height: 100vh;
   background: #1f1f1f;
   padding: 2vh;
@@ -79,7 +79,7 @@ body {
   padding-top: 1vh;
   padding-right: 1vh;
   padding-bottom: 1vh;
-  padding-left: calc(15% + 1vh); /* Sidebar width (15%) + gap (1vh) */
+  padding-left: calc(18% + 1vh); /* Sidebar width (15%) + gap (1vh) */
 }
 
 /* グリッドの子要素がコンテンツで拡張しないようにする */

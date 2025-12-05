@@ -77,7 +77,7 @@ def _build_summary(df_collection) -> Dict[str, float]:
 def _make_graph_template():
     theme = go.layout.Template(
         layout=go.Layout(
-            autosize=True, margin=dict(l=0,r=10,t=0,b=30),
+            autosize=True, margin=dict(l=50,r=30,t=10,b=40),
             paper_bgcolor="#111111",
             plot_bgcolor="#111111",
             font=dict(family="Inter, Roboto", size=14, color="#DDDDDD"),
@@ -151,7 +151,7 @@ def _build_progress_rate(df_collection):
         x=x_values, y=y2_values, mode="lines", name="Smoothing",
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
     ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Progress Rate", "", "%")
+    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Progress Rate", "", ".0%")
     # metaでID付与
     fig.update_layout(meta={"id": "progress_rate"})
 

@@ -1,13 +1,9 @@
-from flask import Blueprint, render_template, current_app,jsonify,make_response
+from flask import Blueprint, current_app,jsonify,make_response
 from .Portfolio_Command_Center_service import build_dashboard_payload
 from werkzeug.exceptions import InternalServerError
 import os
 
 dashboard_bp = Blueprint("Portfolio_Command_Center", __name__, url_prefix="/api/Portfolio_Command_Center")
-
-@dashboard_bp.route("/view")
-def view():
-    return render_template("Portfolio_Command_Center.html")
 
 # API 用ルート
 @dashboard_bp.route("/", methods=["GET"])

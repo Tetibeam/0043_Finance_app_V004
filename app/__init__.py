@@ -1,9 +1,13 @@
 from flask import Flask
+from flask_cors import CORS
 from app.utils.config import load_settings
 import os
 
 def create_app():
     app = Flask(__name__)
+    
+    # CORSを有効化（開発環境用）
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
 
     # YAML設定を読み込み
     # setting.yaml is at the root, so we need to go up one level from app/

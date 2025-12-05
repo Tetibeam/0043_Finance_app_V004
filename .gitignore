@@ -28,7 +28,8 @@ database/
 .src.egg-info/  # パッケージ情報
 
 # ============================
-# Docker / PostgreSQL
+# Docker / PostgreSQL / node
 # ============================
 postgres_data/
 *.log
+frontend/node_modules/

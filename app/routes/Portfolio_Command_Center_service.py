@@ -69,54 +69,21 @@ def _make_vector(current, previous):
     else:
         return 0
 
-# end def
 def _build_summary(df_collection) -> Dict[str, float]:
     latest = get_latest_date()
     one_month_ago = latest - pd.DateOffset(months=1)
 
-    try:
-        total_assets = df_collection.loc[latest, "実績_資産額"].iloc[0]
-        total_target_assets = df_collection.loc[latest, "目標_資産額"].iloc[0]
-    except KeyError:
-        # Latest data missing is critical, let it fail or handle globally
-        raise
+    total_assets = df_collection.loc[latest, "実績_資産額"].iloc[0]
+    total_assets_one_month_ago = df_collection.loc[one_month_ago, "実績_資産額"].iloc[0]
 
-    # Handle missing previous month data gracefully
-    if one_month_ago in df_collection.index:
-        total_assets_one_month_ago = df_collection.loc[one_month_ago, "実績_資産額"].iloc[0]
-        total_target_assets_one_month_ago = df_collection.loc[one_month_ago, "目標_資産額"].iloc[0]
-        
-        # Avoid division by zero if target is 0 for some reason, though unlikely for target
-        target_latest = df_collection.loc[latest, "目標_資産額"].iloc[0]
-        target_prev = df_collection.loc[one_month_ago, "目標_資産額"].iloc[0]
-        
-        if target_latest != 0:
-            fire_progress = df_collection.loc[latest, "実績_資産額"].iloc[0] / target_latest
-        else:
-            fire_progress = 0
-            
-        if target_prev != 0:
-            fire_progress_one_month_ago = df_collection.loc[one_month_ago, "実績_資産額"].iloc[0] / target_prev
-        else:
-            fire_progress_one_month_ago = 0
-            
-        difference = total_assets - total_target_assets
-        difference_one_month_ago = total_assets_one_month_ago - total_target_assets_one_month_ago
-    else:
-        # Fallback values if previous month is missing
-        total_assets_one_month_ago = total_assets
-        total_target_assets_one_month_ago = total_target_assets
-        
-        target_latest = df_collection.loc[latest, "目標_資産額"].iloc[0]
-        if target_latest != 0:
-            fire_progress = df_collection.loc[latest, "実績_資産額"].iloc[0] / target_latest
-        else:
-            fire_progress = 0
-            
-        fire_progress_one_month_ago = fire_progress
-        
-        difference = total_assets - total_target_assets
-        difference_one_month_ago = difference
+    total_target_assets = df_collection.loc[latest, "目標_資産額"].iloc[0]
+    total_target_assets_one_month_ago = df_collection.loc[one_month_ago, "目標_資産額"].iloc[0]
+
+    fire_progress = total_assets / total_target_assets
+    fire_progress_one_month_ago = total_assets_one_month_ago / total_target_assets_one_month_ago
+    
+    difference = total_assets - total_target_assets
+    difference_one_month_ago = total_assets_one_month_ago - total_target_assets_one_month_ago
     
     latest_str = latest.strftime("%Y/%m/%d")
     return {

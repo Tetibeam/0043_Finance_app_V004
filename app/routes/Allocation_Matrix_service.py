@@ -35,35 +35,73 @@ def _read_table_from_db():
     #print(df_asset_profit)
     return df_asset_profit
 
+def _make_vector(current, previous):
+    if previous == 0:
+        return 0
+    rate = current / previous
+    if rate > 1.005:
+        return 1
+    elif rate < 0.995:
+        return -1
+    else:
+        return 0
+
 def _build_summary(df_collection) -> Dict[str, float]:
-    latest = get_latest_date()    
-    latest = latest.strftime("%Y/%m/%d")
+    latest = get_latest_date()
+    one_month_ago = latest - pd.DateOffset(months=1)
     df = df_collection.copy()
+    
     total_asset = df[df["資産タイプ"].isin(["リスク資産", "安全資産"])].groupby("date")["資産額"].sum().loc[latest]
+    total_asset_one_month_ago = df[df["資産タイプ"].isin(["リスク資産", "安全資産"])].groupby("date")["資産額"].sum().loc[one_month_ago]
+    
     active_growth_capital = (
         df[df["資産タイプ"] == "リスク資産"].groupby("date")["資産額"].sum().loc[latest]/
         total_asset
     )
+    active_growth_capital_one_month_ago = (
+        df[df["資産タイプ"] == "リスク資産"].groupby("date")["資産額"].sum().loc[one_month_ago]/
+        total_asset_one_month_ago
+    )
+
     aggressive_return_exposure = (
         df[df["資産サブタイプ"].isin(
             ["国内株式", "投資信託", "ソーシャルレンディング", "セキュリティートークン", "暗号資産"]
         )].groupby("date")["資産額"].sum().loc[latest]/
         total_asset
     )
+    aggressive_return_exposure_one_month_ago = (
+        df[df["資産サブタイプ"].isin(
+            ["国内株式", "投資信託", "ソーシャルレンディング", "セキュリティートークン", "暗号資産"]
+        )].groupby("date")["資産額"].sum().loc[one_month_ago]/
+        total_asset_one_month_ago
+    )
+    
     emergency_buffer = (
         df[df["資産サブタイプ"].isin(["現金", "普通預金/MRF"])].groupby("date")["資産額"].sum().loc[latest]
+    )
+    emergency_buffer_one_month_ago = (
+        df[df["資産サブタイプ"].isin(["現金", "普通預金/MRF"])].groupby("date")["資産額"].sum().loc[one_month_ago]
     )
     debt_exposure_ratio = (
         df[df["資産タイプ"] == "負債"].groupby("date")["資産額"].sum().loc[latest]/
         total_asset*-1
     )
-    
+    debt_exposure_ratio_one_month_ago = (
+        df[df["資産タイプ"] == "負債"].groupby("date")["資産額"].sum().loc[one_month_ago]/
+        total_asset_one_month_ago*-1
+    )
+
+    latest_str = latest.strftime("%Y/%m/%d")
     return {
-        "latest_date": latest,
+        "latest_date": latest_str,
         "active_growth_capital": round(active_growth_capital*100,1),
+        "active_growth_capital_vector": _make_vector(active_growth_capital, active_growth_capital_one_month_ago),
         "aggressive_return_exposure": round(aggressive_return_exposure*100,1),
+        "aggressive_return_exposure_vector": _make_vector(aggressive_return_exposure, aggressive_return_exposure_one_month_ago),
         "emergency_buffer": round(emergency_buffer),
+        "emergency_buffer_vector": _make_vector(emergency_buffer, emergency_buffer_one_month_ago),
         "debt_exposure_ratio": round(debt_exposure_ratio*100,1),
+        "debt_exposure_ratio_vector": _make_vector(debt_exposure_ratio, debt_exposure_ratio_one_month_ago),
     }
 
 def _make_graph_template():

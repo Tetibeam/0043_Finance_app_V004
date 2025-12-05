@@ -57,7 +57,7 @@ body {
 .summary-grid {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1vh 1vh;
+  gap: 0.5vh 1.51vh;
   font-size: 1.8vh;
 }
 

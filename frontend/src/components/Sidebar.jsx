@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import KPIDashboard from './KPIDashboard'
+import KPICommandCenter from './KPICommandCenter'
 import KPIAllocationMatrix from './KPIAllocationMatrix'
 
 function Sidebar() {
@@ -21,7 +21,7 @@ function Sidebar() {
       {location.pathname === '/allocation_matrix' ? (
         <KPIAllocationMatrix />
       ) : (
-        <KPIDashboard />
+        <KPICommandCenter />
       )}
     </div>
   )

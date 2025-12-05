@@ -22,6 +22,13 @@ function KPIAllocationMatrix() {
     fetchSummary()
   }, [])
 
+  const getVectorIcon = (vector) => {
+    if (vector === 1) return '👆 '
+    if (vector === -1) return '👇 '
+    if (vector === 0) return '👉 '
+    return '　 '
+  }
+
   if (loading) return <div id="dashboard-summary">読み込み中...</div>
   if (error) return <div id="dashboard-summary">エラー: {error}</div>
   if (!summary) return null
@@ -49,19 +56,23 @@ function KPIAllocationMatrix() {
       
       <div className="summary-grid">
         <div>Date:</div>
-        <div>{summary.latest_date}</div>
+        <div style={{marginLeft: '1.2vw'}}>{summary.latest_date}</div>
         
         <div>Dynamic Assets:</div>
-        <div>{summary.active_growth_capital.toLocaleString()}%</div>
+        <div>{getVectorIcon(summary.active_growth_capital_vector)}
+          {summary.active_growth_capital.toLocaleString()}%</div>
         
         <div>Aggressive Assets:</div>
-        <div>{summary.aggressive_return_exposure.toLocaleString()}%</div>
+        <div>{getVectorIcon(summary.aggressive_return_exposure_vector)}
+          {summary.aggressive_return_exposure.toLocaleString()}%</div>
         
         <div>Emergency Buffer:</div>
-        <div>¥ {summary.emergency_buffer.toLocaleString()}</div>
+        <div>{getVectorIcon(summary.emergency_buffer_vector)}
+          ¥ {summary.emergency_buffer.toLocaleString()}</div>
         
         <div>Debt Exposure:</div>
-        <div>{summary.debt_exposure_ratio.toLocaleString()}%</div>
+        <div>{getVectorIcon(summary.debt_exposure_ratio_vector)}
+          {summary.debt_exposure_ratio.toLocaleString()}%</div>
       </div>
     </div>
   )

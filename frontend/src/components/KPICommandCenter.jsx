@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function KPIDashboard() {
+function KPICommandCenter() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -56,12 +56,10 @@ function KPIDashboard() {
       <div className="summary-grid">
         
         <div>Date:</div>
-        <div>{summary.latest_date}</div>
+        <div style={{marginLeft: '1.2vw'}}>{summary.latest_date}</div>
         
         <div>Fire Progress:</div>
-        <div>
-          {getVectorIcon(summary.fire_progress_vector)}
-          {summary.fire_progress.toLocaleString()}%</div>
+        <div>{getVectorIcon(summary.fire_progress_vector)}{summary.fire_progress.toLocaleString()}%</div>
         
         <div>Net Worth :</div>
         <div>{getVectorIcon(summary.total_assets_vector)}¥ {summary.total_assets.toLocaleString()}</div>
@@ -76,4 +74,4 @@ function KPIDashboard() {
   )
 }
 
-export default KPIDashboard
+export default KPICommandCenter

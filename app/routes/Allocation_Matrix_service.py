@@ -161,197 +161,90 @@ def _graph_individual_setting(fig, x_title, x_tickformat, y_title, y_tickprefix,
     return fig
 
 def _build_asset_tree_map(df_collection):
-    # データフレーム
-    df = pd.DataFrame(columns=["生値", "スムージング"])
-    df["生値"] = df_collection["実績_資産額"] / df_collection["目標_資産額"]
-    df["スムージング"] = df["生値"].rolling(window=30).mean()
-    df.fillna(1, inplace=True)
+    #データフレーム作成
+    latest = df_collection["date"].max()
+    df = df_collection[df_collection["date"] == latest][["資産サブタイプ","資産タイプ","資産額"]]
+    df.drop(df[df["資産タイプ"] == "負債"].index, inplace=True)
+    df_tree = df.rename(columns={"資産サブタイプ":"labels", "資産タイプ":"parents", "資産額":"values"})
 
-    # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
-    y1_values = df["生値"].astype(float).tolist()
-    y2_values = df["スムージング"].astype(float).tolist()
+    list = []
+    for label in ["安全資産","リスク資産"]:
+        list.append({
+            "labels":label,
+            "parents":"総資産",
+            "values":df_tree[df_tree["parents"] == label]["values"].sum()
+        })
+    list.append({
+        "labels":"総資産",
+        "parents":"",
+        "values":df_tree["values"].sum()
+    })
+    df_tree = pd.concat([df_tree, pd.DataFrame(list)], ignore_index=True)
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y1_values, mode="lines", name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines", name="Smoothing",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
-    ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Progress Rate", "", ".0%")
-    # metaでID付与
-    fig.update_layout(meta={"id": "progress_rate"})
+    df_tree["parents"] = df_tree["parents"].replace({
+        "安全資産":"Defensive Assets",
+        "リスク資産":"Aggressive Growth Assets",
+        "総資産":"Gross Assets",
+    })
 
-    fig_dict = fig.to_dict()
-    json_str = json.dumps(fig_dict)
-    #fig.show()
-    return json_str
+    df_tree["labels"] = df_tree["labels"].replace({
+        "総資産":"Gross Assets",
+        "安全資産":"Defensive Assets",
+        "リスク資産":"Aggressive Growth Assets",
+        "現金/電子マネー":"Cash",
+        "普通預金/MRF":"Cash Reserves",
+        "定期預金/仕組預金":"Time Deposits",
+        "確定年金":"Real Estate",
+        "日本国債":"Securities",
+        "預入金":"Cash Deposits",
+        "ポイント":"Loyalty Rewards",
+        "投資信託":"Investment Trust",
+        "ソーシャルレンディング":"P2P Lending",
+        "セキュリティートークン":"Tokenized Real Estate",
+        "確定拠出年金":"Defined Contribution Plan",
+        "暗号資産":"Digital Assets",
+        "円建社債":"Fixed Income",
+        "国内株式":"Domestic Equity",
+    })
 
-def _build_saving_rate(df_collection):
-    # データフレーム作成
-    df_collection_prev = df_collection.loc[: df_collection.index.max() - pd.offsets.MonthEnd(1)]
-    df = pd.DataFrame(columns=["実績_貯蓄率", "目標_貯蓄率"])
-    df["実績_貯蓄率"] = (
-        (
-            df_collection_prev.resample("ME")["金額"].sum() +
-            df_collection_prev.resample("ME")["実績_トータルリターン"].last().diff()
-        )/
-        df_collection_prev[df_collection_prev["収支カテゴリー"] == "収入"].resample("ME")["金額"].sum()
+    #データフレーム作成
+    labels = df_tree["labels"].tolist()
+    parents = df_tree["parents"].tolist()
+    values = df_tree["values"].astype(int).tolist()
+
+    fig = go.Figure(
+        go.Treemap(
+            labels=labels, parents=parents, values=values,
+            visible=True, branchvalues ="total", marker_colorscale = 'Blues',
+            textinfo = "label+percent parent+percent entry",
+            textfont_size= 14,hoverlabel_font_size = 14,
+            hovertemplate =
+                '<br><i>Name</i>: %{label}'+
+                '<br><i>Amount</i>: ¥%{value}<extra></extra>'
+        )
     )
-    df["目標_貯蓄率"] = (
-        (
-            df_collection_prev.resample("ME")["目標"].sum() +
-            df_collection_prev.resample("ME")["目標_トータルリターン"].last().diff()
-        )/
-        df_collection_prev[df_collection_prev["収支カテゴリー"] == "収入"].resample("ME")["目標"].sum()
-    )
-    df.dropna(inplace=True)
-    #print(df)
-    # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m").tolist()
-    y1_values = df["実績_貯蓄率"].astype(float).tolist()
-    y2_values = df["目標_貯蓄率"].astype(float).tolist()
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=x_values, y=y1_values, name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines+markers", name="Target",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
-    ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Saving Rate", "", ".0%")
-    # metaでID付与
-    fig.update_layout(meta={"id": "saving_rate"})
-
-    fig_dict = fig.to_dict()
-    json_str = json.dumps(fig_dict)
-    #fig.show()
-    return json_str
-
-def _build_total_assets(df_collection):
-    # データフレーム生成
-    df = df_collection[["実績_資産額", "目標_資産額"]]
-    #print(df)
-    # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
-    y1_values = df["実績_資産額"].astype(int).tolist()
-    y2_values = df["目標_資産額"].astype(int).tolist()
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y1_values, mode="lines", name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}+<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines", name="Target",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}+<extra></extra>'
-    ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Net Assets", "¥", "")
-    # metaでID付与
-    fig.update_layout(meta={"id": "total_assets"})
-
-    fig_dict = fig.to_dict()
-    json_str = json.dumps(fig_dict)
-    #fig.show()
-    return json_str
-
-def _build_total_returns(df_collection):
-    # データフレーム生成
-    df = df_collection[["実績_トータルリターン", "目標_トータルリターン"]]
-    #print(df)
-    # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
-    y1_values = df["実績_トータルリターン"].astype(int).tolist()
-    y2_values = df["目標_トータルリターン"].astype(int).tolist()
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y1_values, mode="lines", name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines", name="Target",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
-    fig = _graph_individual_setting(fig,"date", "%Y-%m-%d", "Total Returns", "¥", "")
-
-    # metaでID付与
-    fig.update_layout(meta={"id": "total_returns"})
-
-    fig_dict = fig.to_dict()
-    json_str = json.dumps(fig_dict)
-    #fig.show()
-    #print(json_str)
-    return json_str
-
-def _build_general_balance(df_collection):
-    df = pd.DataFrame(columns=["実績_一般収支", "目標_一般収支"])
-    df["実績_一般収支"] = (
-        df_collection[df_collection["収支タイプ"] == "一般収支"].resample("ME")["金額"].sum()
-    )
-    df["目標_一般収支"] = (
-        df_collection[df_collection["収支タイプ"] == "一般収支"].resample("ME")["目標"].sum()
-    )
-
-    x_values = df.index.strftime("%Y-%m").tolist()
-    y1_values = df["実績_一般収支"].astype(int).tolist()
-    y2_values = df["目標_一般収支"].astype(int).tolist()
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=x_values, y=y1_values, name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines+markers", name="Target",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
-
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Balance", "¥", "")
-    # metaでID付与
-    fig.update_layout(meta={"id": "general_balance"})
-
-    fig_dict = fig.to_dict()
-    json_str = json.dumps(fig_dict)
-    #fig.show()
-    return json_str
-
-def _build_special_balance(df_collection):
-    df = pd.DataFrame(columns=["実績_特別収支", "目標_特別収支"])
-    df["実績_特別収支"] = (
-        df_collection [df_collection["収支タイプ"] == "特別収支"].resample("ME")["金額"].sum().cumsum()
-    )
-    df["目標_特別収支"] = (
-        df_collection [df_collection["収支タイプ"] == "特別収支"].resample("ME")["目標"].sum().cumsum()
+    fig.update_layout(
+        margin=dict(t=0, l=0, r=0, b=0),
     )
     
-    x_values = df.index.strftime("%Y-%m").tolist()
-    y1_values = df["実績_特別収支"].astype(int).tolist()
-    y2_values = df["目標_特別収支"].astype(int).tolist()
-    
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y1_values, mode="lines+markers", fill="tozeroy", name="Actual",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
-    fig.add_trace(go.Scatter(
-        x=x_values, y=y2_values, mode="lines+markers", name="Target",
-        hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
-    ))
+    fig.update_layout(meta={"id": "asset_tree_map"})
 
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Cash - Cumulative", "¥", "")
-    # metaでID付与
-    fig.update_layout(meta={"id": "special_balance"})
+    #fig.show()
 
     fig_dict = fig.to_dict()
     json_str = json.dumps(fig_dict)
-    #fig.show()
     return json_str
 
+def _build_target_deviation(df_collection):
+    pass
+def _build_portfolio_efficiency_map(df_collection):
+    pass
+def _build_liquidity_pyramid(df_collection):
+    pass
+def _build_true_risk_exposure_flow(df_collection):
+    pass
+def _build_rebalancing_workbench(df_collection):
+    pass
 def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
     # DBから必要データを読み込みます
     df_collection = _read_table_from_db()
@@ -364,14 +257,14 @@ def build_dashboard_payload(include_graphs: bool = True, include_summary: bool =
     if include_graphs:
         _make_graph_template()
 
-        #result["graphs"] = {
-            #"asset_tree_map": _build_asset_tree_map(df_collection),
-            #"saving_rate": _build_saving_rate(df_collection),
-            #"assets": _build_total_assets(df_collection),
-            #"returns": _build_total_returns(df_collection),
-            #"general_balance": _build_general_balance(df_collection),
-            #"special_balance": _build_special_balance(df_collection)
-        #}
+        result["graphs"] = {
+            "asset_tree_map": _build_asset_tree_map(df_collection),
+            "target_deviation": _build_target_deviation(df_collection),
+            "portfolio_efficiency_map": _build_portfolio_efficiency_map(df_collection),
+            "liquidity_pyramid": _build_liquidity_pyramid(df_collection),
+            "true_risk_exposure_flow": _build_true_risk_exposure_flow(df_collection),
+            "rebalancing_workbench": _build_rebalancing_workbench(df_collection)
+        }
     return result
 
 if __name__ == "__main__":
@@ -386,13 +279,13 @@ if __name__ == "__main__":
     init_db(base_dir)
     df = _read_table_from_db()
     #print(df)
-    print(_build_summary(df))
-    #_build_progress_rate(df)
-    #_build_saving_rate(df)
-    #_build_total_assets(df)
-    #_build_total_returns(df)
-    #_build_general_balance(df)
-    #_build_special_balance(df)
+    #print(_build_summary(df))
+    _build_asset_tree_map(df)
+    _build_target_deviation(df)
+    _build_portfolio_efficiency_map(df)
+    _build_liquidity_pyramid(df)
+    _build_true_risk_exposure_flow(df)
+    _build_rebalancing_workbench(df)
 
 
 

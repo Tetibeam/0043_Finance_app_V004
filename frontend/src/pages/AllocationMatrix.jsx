@@ -10,7 +10,7 @@ function AllocationMatrix() {
   useEffect(() => {
     const fetchGraphs = async () => {
       try {
-        const response = await axios.get('/api/Portfolio_Command_Center/graphs')
+        const response = await axios.get('/api/Allocation_Matrix/graphs')
         setGraphs(response.data.graphs)
         setLoading(false)
       } catch (err) {
@@ -25,22 +25,22 @@ function AllocationMatrix() {
 
   // グラフの表示順
   const graphOrder = [
-    'progress_rate',
-    'saving_rate',
-    'assets',
-    'general_balance',
-    'special_balance',
-    'returns'
+    'asset_tree_map',
+    'target_deviation',
+    'portfolio_efficiency_map',
+    'liquidity_pyramid',
+    'true_risk_exposure_flow',
+    'rebalancing_workbench'
   ]
 
   // グラフタイトルのマッピング
   const graphTitles = {
-    'progress_rate': "<span><img src='/static/icon/star.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> FIRE Readiness</span>",
-    'saving_rate': "<span><img src='/static/icon/sail.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Savings Efficiency</span>",
-    'assets': "<span><img src='/static/icon/compass.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Net Worth Trajectory</span>",
-    'returns': "<span><img src='/static/icon/line-chart.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Portfolio Performance</span>",
-    'general_balance': "<span><img src='/static/icon/waves.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Cash Flow – Routine</span>",
-    'special_balance': "<span><img src='/static/icon/lighthouse.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Cash Flow – Exceptional</span>"
+    'asset_tree_map': "<span><img src='/static/icon/star.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Interactive Treemap</span>",
+    'target_deviation': "<span><img src='/static/icon/sail.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Target Deviation</span>",
+    'portfolio_efficiency_map': "<span><img src='/static/icon/compass.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Portfolio Efficiency Map</span>",
+    'liquidity_pyramid': "<span><img src='/static/icon/line-chart.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Liquidity Pyramid</span>",
+    'true_risk_exposure_flow': "<span><img src='/static/icon/waves.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> True Risk Exposure Flow</span>",
+    'rebalancing_workbench': "<span><img src='/static/icon/lighthouse.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Rebalancing Workbench</span>"
   }
 
   if (loading) {

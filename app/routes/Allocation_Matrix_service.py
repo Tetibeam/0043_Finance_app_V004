@@ -445,7 +445,7 @@ def _build_liquidity_pyramid(df_collection):
             x=[bar_width],
             orientation='h',
             name=tier['name'],
-            text=f'¥{tier["value"]:,}', # バー上に金額を表示
+            text=f'¥{tier["value"]:,}<br>{tier["value"] / total_assets:.1%}', # バー上に金額を表示
             textposition='inside',
             insidetextanchor='middle',
             marker=dict(color=tier['color']),

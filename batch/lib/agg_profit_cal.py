@@ -293,12 +293,12 @@ def _prepare_in_out(df_balance_raw, account):
         df_in = single_filter_df_by_value(df_in, "内容", "クラウド")
         df_in["金額"] = df_in["金額"] *-1
         return df_in
-    elif account == "ALTERNA":
-        df_in = double_filter_df_by_value(df_balance_raw, "大項目", "収入", "中項目", "資金移動")
-        df_in = single_filter_df_by_value(df_in, "保有金融機関", account)
-        df_out = double_filter_df_by_value(df_balance_raw, "大項目", "その他", "中項目", "資金移動")
-        df_out = single_filter_df_by_value(df_out, "内容", "三井物産")
-        return pd.concat([df_in,df_out],axis=0)
+    #elif account == "ALTERNA":
+    #    df_in = double_filter_df_by_value(df_balance_raw, "大項目", "収入", "中項目", "資金移動")
+    #    df_in = single_filter_df_by_value(df_in, "保有金融機関", account)
+    #    df_out = double_filter_df_by_value(df_balance_raw, "大項目", "その他", "中項目", "資金移動")
+    #    df_out = single_filter_df_by_value(df_out, "内容", "三井物産")
+    #    return pd.concat([df_in,df_out],axis=0)
     else:
         df_in = double_filter_df_by_value(df_balance_raw, "大項目", "収入", "中項目", "資金移動")
         df_in = single_filter_df_by_value(df_in, "保有金融機関", account)
@@ -308,10 +308,10 @@ def set_realized_cloud_funds(df_asset_profit, start_date, end_date, df_balance_r
     df_keys = urds.df_asset_type_and_category.copy()
     df_values = df_asset_profit.copy()
 
-    sub_type_list = ["ソーシャルレンディング", "セキュリティートークン"]
+    #sub_type_list = ["ソーシャルレンディング", "セキュリティートークン"]
+    sub_type_list = ["ソーシャルレンディング"]
 
-    mask = (df_keys["資産サブタイプ"].isin(sub_type_list))&\
-        ~df_keys["金融機関口座"].str.contains("SBI ST口座")
+    mask = (df_keys["資産サブタイプ"].isin(sub_type_list))
     accounts = df_keys[mask]["金融機関口座"].unique().tolist()
     dfs = []
     for account in accounts:
@@ -321,11 +321,11 @@ def set_realized_cloud_funds(df_asset_profit, start_date, end_date, df_balance_r
         df_current_invest = df_values[mask].groupby("date").sum()["資産額"]
 
         # 口座残高
-        mask = (df_keys["資産サブタイプ"] == "預入金")&\
-            df_keys["金融機関口座"].str.contains(account)
-        df_asset_name = df_keys[mask]["資産名"].to_list()
-        mask = df_values["資産名"].isin(df_asset_name)
-        df_current_account_balance = df_values[mask].groupby("date").sum()["資産額"]
+        #mask = (df_keys["資産サブタイプ"] == "預入金")&\
+        #    df_keys["金融機関口座"].str.contains(account)
+        #df_asset_name = df_keys[mask]["資産名"].to_list()
+        #mask = df_values["資産名"].isin(df_asset_name)
+        #df_current_account_balance = df_values[mask].groupby("date").sum()["資産額"]
 
         # 入出金額
         df_in_out = (
@@ -339,13 +339,15 @@ def set_realized_cloud_funds(df_asset_profit, start_date, end_date, df_balance_r
         df_total_in_out = df_in_out["金額"]
 
         results =(
-            (df_current_invest + df_current_account_balance - df_total_in_out)
+            #(df_current_invest + df_current_account_balance - df_total_in_out)
+            (df_current_invest - df_total_in_out)
             .diff().fillna(0)
             .rename("実現損益")
             .reset_index()
         )
 
-        mask = (df_keys["資産サブタイプ"] == "預入金")&\
+        #mask = (df_keys["資産サブタイプ"] == "預入金")&\
+        mask = (df_keys["資産名"].str.contains("残高",na=False))&\
             df_keys["金融機関口座"].str.contains(account)
         results["資産名"] = df_keys[mask]["資産名"].iloc[0]
         dfs.append(results)

@@ -40,6 +40,11 @@ def make_asset_main():
     # ---- processing ----
     df_pre = data_cleaning(df_raw)
 
+    # ---- Temporary ---->>>>>TESTファイルへの出力を終了するとき必ず削除すること
+    mask = df_pre["資産名"] == "口座残高(ALTERNA)"
+    df_pre = df_pre[~mask]
+    df_pre.loc[df_pre["金融機関口座"] == "ALTERNA", "取得価格"] = 0.0
+
     check_not_registered_columns_before_finalize(df_pre)
 
     df_final = finalize_clean_data(df_pre, df_asset_profit)

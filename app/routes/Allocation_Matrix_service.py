@@ -24,7 +24,7 @@ def _read_table_from_db():
             "資産タイプ": "MAX",
             "資産額": "SUM",
             "トータルリターン": "SUM",
-            "取得価格": "SUM"
+            "取得価格": "SUM",
         },
         group_by=["date","資産サブタイプ"],
         start_date=start_date,
@@ -32,9 +32,25 @@ def _read_table_from_db():
         filters=None,
         order_by=["date"]
     )
+
+    df_asset_profit_latest = query_table_aggregated(
+        table_name="asset_profit_detail",
+        aggregates={
+            "資産サブタイプ": "MAX",
+            "資産額": "MAX",
+        },
+        group_by=["資産名"],
+        start_date=latest_date,
+        end_date=latest_date,
+        filters=None,
+        order_by=["資産名"]
+    )
+
     df_asset_sub_type_attribute = get_raw_table("asset_sub_type_attribute")
 
-    return df_asset_profit, df_asset_sub_type_attribute
+    df_asset_attribute = get_raw_table("asset_attribute")
+
+    return df_asset_profit, df_asset_profit_latest, df_asset_sub_type_attribute, df_asset_attribute
 
 def _make_vector(current, previous):
     if previous == 0:
@@ -479,12 +495,20 @@ def _build_liquidity_pyramid(df_collection, df_asset_sub_type_attribute):
 def _build_true_risk_exposure_flow(df_collection):
     pass
 
-def _build_liquidity_horizon(df_collection):
-    pass
+def _build_liquidity_horizon(df_collection_latest, df_asset_attribute):
+    df_ref = df_asset_attribute.copy()
+    df = df_ref[df_ref["償還日"].notna()][["資産名","資産サブタイプ","償還日"]].set_index("資産名")
+    df_assets = (
+        df_collection_latest[df_collection_latest["資産名"].isin(
+            df.index.tolist()
+        )][["資産名","資産額"]].set_index("資産名")
+    )
+    df = pd.merge(df, df_assets, left_index=True, right_index=True)
+
 
 def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
     # DBから必要データを読み込みます
-    df_collection, df_asset_sub_type_attribute = _read_table_from_db()
+    df_collection, df_asset_sub_type_attribute, df_asset_attribute= _read_table_from_db()
 
     result = {"ok":True, "summary": {}, "graphs": {}}
 
@@ -500,7 +524,7 @@ def build_dashboard_payload(include_graphs: bool = True, include_summary: bool =
             "portfolio_efficiency_map": _build_portfolio_efficiency_map(df_collection,df_asset_sub_type_attribute),
             "liquidity_pyramid": _build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute),
             "true_risk_exposure_flow": _build_true_risk_exposure_flow(df_collection),
-            "liquidity_horizon": _build_liquidity_horizon(df_collection)
+            "liquidity_horizon": _build_liquidity_horizon(df_collection, df_asset_attribute)
         }
     return result
 
@@ -514,11 +538,11 @@ if __name__ == "__main__":
     # DBマネージャーの初期化
     from app.utils.db_manager import init_db
     init_db(base_dir)
-    df_collection,df_asset_sub_type_attribute = _read_table_from_db()
+    df_collection, df_collection_latest, df_asset_sub_type_attribute, df_asset_attribute = _read_table_from_db()
     #print(_build_summary(df_collection))
-    _build_asset_tree_map(df_collection,df_asset_sub_type_attribute)
+    #_build_asset_tree_map(df_collection,df_asset_sub_type_attribute)
     #_build_target_deviation(df_collection)
-    _build_portfolio_efficiency_map(df_collection,df_asset_sub_type_attribute)
-    _build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute)
+    #_build_portfolio_efficiency_map(df_collection,df_asset_sub_type_attribute)
+    #_build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute)
     #_build_true_risk_exposure_flow(df_collection)
-    #_build_liquidity_horizon(df_collection)
+    _build_liquidity_horizon(df_collection_latest, df_asset_attribute)

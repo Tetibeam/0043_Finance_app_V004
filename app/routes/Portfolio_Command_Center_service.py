@@ -85,7 +85,7 @@ def _build_summary(df_collection) -> Dict[str, float]:
     difference = total_assets - total_target_assets
     difference_one_month_ago = total_assets_one_month_ago - total_target_assets_one_month_ago
     
-    latest_str = latest.strftime("%Y/%m/%d")
+    latest_str = latest.strftime("%y/%m/%d")
     return {
         "latest_date": latest_str,
         "fire_progress": round(fire_progress*100, 1),
@@ -162,7 +162,7 @@ def _build_progress_rate(df_collection):
     df.fillna(1, inplace=True)
 
     # グラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    x_values = df.index.strftime("%y-%m-%d").tolist()
     y1_values = df["生値"].astype(float).tolist()
     y2_values = df["スムージング"].astype(float).tolist()
 
@@ -175,7 +175,7 @@ def _build_progress_rate(df_collection):
         x=x_values, y=y2_values, mode="lines", name="Smoothing",
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
     ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Progress Rate", "", ".0%")
+    fig = _graph_individual_setting(fig, "date", "%y-%m-%d", "Progress Rate", "", ".0%")
     # metaでID付与
     fig.update_layout(meta={"id": "progress_rate"})
 
@@ -205,7 +205,7 @@ def _build_saving_rate(df_collection):
     df.dropna(inplace=True)
     #print(df)
     # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m").tolist()
+    x_values = df.index.strftime("%y-%m").tolist()
     y1_values = df["実績_貯蓄率"].astype(float).tolist()
     y2_values = df["目標_貯蓄率"].astype(float).tolist()
 
@@ -218,7 +218,7 @@ def _build_saving_rate(df_collection):
         x=x_values, y=y2_values, mode="lines+markers", name="Target",
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: %{y:.1%}<extra></extra>'
     ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Saving Rate", "", ".0%")
+    fig = _graph_individual_setting(fig, "date", "%y-%m", "Saving Rate", "", ".0%")
     # metaでID付与
     fig.update_layout(meta={"id": "saving_rate"})
 
@@ -232,7 +232,7 @@ def _build_total_assets(df_collection):
     df = df_collection[["実績_資産額", "目標_資産額"]]
     #print(df)
     # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    x_values = df.index.strftime("%y-%m-%d").tolist()
     y1_values = df["実績_資産額"].astype(int).tolist()
     y2_values = df["目標_資産額"].astype(int).tolist()
     fig = go.Figure()
@@ -244,7 +244,7 @@ def _build_total_assets(df_collection):
         x=x_values, y=y2_values, mode="lines", name="Target",
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}+<extra></extra>'
     ))
-    fig = _graph_individual_setting(fig, "date", "%Y-%m-%d", "Net Assets", "¥", "")
+    fig = _graph_individual_setting(fig, "date", "%y-%m-%d", "Net Assets", "¥", "")
     # metaでID付与
     fig.update_layout(meta={"id": "total_assets"})
 
@@ -258,7 +258,7 @@ def _build_total_returns(df_collection):
     df = df_collection[["実績_トータルリターン", "目標_トータルリターン"]]
     #print(df)
     # PXでグラフ生成
-    x_values = df.index.strftime("%Y-%m-%d").tolist()
+    x_values = df.index.strftime("%y-%m-%d").tolist()
     y1_values = df["実績_トータルリターン"].astype(int).tolist()
     y2_values = df["目標_トータルリターン"].astype(int).tolist()
 
@@ -271,7 +271,7 @@ def _build_total_returns(df_collection):
         x=x_values, y=y2_values, mode="lines", name="Target",
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
     ))
-    fig = _graph_individual_setting(fig,"date", "%Y-%m-%d", "Total Returns", "¥", "")
+    fig = _graph_individual_setting(fig,"date", "%y-%m-%d", "Total Returns", "¥", "")
 
     # metaでID付与
     fig.update_layout(meta={"id": "total_returns"})
@@ -291,7 +291,7 @@ def _build_general_balance(df_collection):
         df_collection[df_collection["収支タイプ"] == "一般収支"].resample("ME")["目標"].sum()
     )
 
-    x_values = df.index.strftime("%Y-%m").tolist()
+    x_values = df.index.strftime("%y-%m").tolist()
     y1_values = df["実績_一般収支"].astype(int).tolist()
     y2_values = df["目標_一般収支"].astype(int).tolist()
 
@@ -305,7 +305,7 @@ def _build_general_balance(df_collection):
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
     ))
 
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Balance", "¥", "")
+    fig = _graph_individual_setting(fig, "date", "%y-%m", "Net Balance", "¥", "")
     # metaでID付与
     fig.update_layout(meta={"id": "general_balance"})
 
@@ -323,7 +323,7 @@ def _build_special_balance(df_collection):
         df_collection [df_collection["収支タイプ"] == "特別収支"].resample("ME")["目標"].sum().cumsum()
     )
     
-    x_values = df.index.strftime("%Y-%m").tolist()
+    x_values = df.index.strftime("%y-%m").tolist()
     y1_values = df["実績_特別収支"].astype(int).tolist()
     y2_values = df["目標_特別収支"].astype(int).tolist()
     
@@ -337,7 +337,7 @@ def _build_special_balance(df_collection):
         hovertemplate = '<i>x</i>: %{x}<br><i>y</i>: ¥%{y:,}<extra></extra>'
     ))
 
-    fig = _graph_individual_setting(fig, "date", "%Y-%m", "Net Cash - Cumulative", "¥", "")
+    fig = _graph_individual_setting(fig, "date", "%y-%m", "Net Cash - Cumulative", "¥", "")
     # metaでID付与
     fig.update_layout(meta={"id": "special_balance"})
 

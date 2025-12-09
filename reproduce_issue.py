@@ -2,41 +2,34 @@ import sys
 import os
 import pandas as pd
 import json
+import traceback
 
-# Add project root to sys.path
+# Add current directory to path
 sys.path.append(os.getcwd())
 
-from app.utils.data_loader import get_df_from_db
 from app.utils.db_manager import init_db
-# Import the function to test
-# We need to import it from the file. Since it's a private function (starts with _), we might need to import the module.
-from app.routes import dashboard_service
+from app.routes.Allocation_Matrix_service import build_dashboard_payload, _read_table_from_db, _build_liquidity_horizon
 
-def test_build_progress_rate():
-    # Initialize DB
-    init_db()
+def test():
+    # Init DB
+    print("Initializing DB...")
+    init_db(os.getcwd())
     
-    table_columns = [
-        "資産_実績_資産額", "資産_目標_資産額","資産_実績_トータルリターン", "資産_目標_トータルリターン", "資産_進捗率"
-    ]
+    # Run the function
+    print("Running build_dashboard_payload...")
     try:
-        print("Fetching data from DB...")
-        df = get_df_from_db(
-            table_name="category_cache_daily", index_col="date", columns_col=None,
-            values_col=table_columns, aggfunc="sum", set_index=True
-        )
-        print("Data fetched. Shape:", df.shape)
-        
-        print("Testing _build_progress_rate...")
-        # Access the private function
-        json_str = dashboard_service._build_progress_rate(df)
-        print("Result JSON length:", len(json_str))
-        print("SUCCESS: _build_progress_rate executed without error.")
-        
+        # We can just call build_dashboard_payload which calls everything
+        payload = build_dashboard_payload(include_graphs=True, include_summary=False)
+        print("Success! Payload generated.")
+        # Optional: check if the 'liquidity_horizon' is in graphs
+        if "graphs" in payload and "liquidity_horizon" in payload["graphs"]:
+            print("Liquidity horizon graph present.")
+        else:
+            print("Liquidity horizon graph MISSING.")
+            
     except Exception as e:
-        print(f"ERROR: {e}")
-        import traceback
+        print(f"Caught exception: {e}")
         traceback.print_exc()
 
 if __name__ == "__main__":
-    test_build_progress_rate()
+    test()

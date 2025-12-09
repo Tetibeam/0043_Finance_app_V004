@@ -51,6 +51,26 @@ function AllocationMatrix() {
     return <div className="main"><div>Error: {error}</div></div>
   }
 
+  /* New: Handler for plot clicks */
+  const handlePlotClick = (data, graphKey) => {
+    // Only target 'liquidity_horizon' as requested
+    if (graphKey === 'liquidity_horizon') {
+      if (data && data.points && data.points.length > 0) {
+        // Extract the clicked label (Asset Subtype)
+        // Note: Plotly event data structure varies, but generally points[0].data.name or customdata
+        const point = data.points[0];
+        // In the backend _build_liquidity_horizon, we set name=sub_type
+        const subType = point.data.name; 
+        
+        if (subType) {
+            // Open new tab
+            const url = `/allocation_matrix/${graphKey}/details?sub_type=${encodeURIComponent(subType)}`
+            window.open(url, '_blank')
+        }
+      }
+    }
+  }
+
   return (
     <div id="graphs-area" className="main">
       {graphOrder.map(key => {
@@ -62,6 +82,7 @@ function AllocationMatrix() {
             key={key}
             figJson={figJson}
             titleHtml={graphTitles[key] || key}
+            onPlotClick={(data) => handlePlotClick(data, key)}
           />
         )
       })}

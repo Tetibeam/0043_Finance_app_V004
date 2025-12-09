@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Plot from 'react-plotly.js'
 
-function GraphContainer({ figJson, titleHtml }) {
+function GraphContainer({ figJson, titleHtml, onPlotClick }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
@@ -158,6 +158,7 @@ function GraphContainer({ figJson, titleHtml }) {
             responsive: false,
             displayModeBar: false
           }}
+          onClick={onPlotClick}
           style={{ 
             width: `${containerSize.width}px`, 
             height: `${containerSize.height - 35}px` 

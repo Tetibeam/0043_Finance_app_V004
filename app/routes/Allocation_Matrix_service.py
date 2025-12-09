@@ -497,79 +497,9 @@ def _build_liquidity_pyramid(df_collection, df_asset_sub_type_attribute):
 def _build_true_risk_exposure_flow(df_collection):
     pass
 
-def _build_liquidity_horizon(df_collection_latest, df_asset_attribute):
-    # データフレーム作成
-    df_ref = df_asset_attribute.copy()
-    df = df_ref[df_ref["償還日"].notna()][["資産名","資産サブタイプ","償還日"]].set_index("資産名")
-    df_assets = (
-        df_collection_latest[df_collection_latest["資産名"].isin(
-            df.index.tolist()
-        )][["資産名","資産額"]].set_index("資産名")
-    )
-    df = pd.merge(df, df_assets, left_index=True, right_index=True)
-    df.reset_index(names="資産名",inplace=True)
-
-    latest = df_collection_latest["date"].max()
-    mask = (df["償還日"] >= latest) & (df["償還日"] <= latest + pd.DateOffset(months=12))
-    df = df[mask]
-    #print(df)
-    #print(df.dtypes)
-
-    # グラフ作成
-    df_monthly = df.groupby([pd.Grouper(key='償還日', freq='ME'), '資産サブタイプ'])['資産額'].sum().reset_index()
-    all_months = pd.date_range(
-        start=df_monthly['償還日'].min(), 
-        end=df_monthly['償還日'].max(), 
-        freq='MS'
-    )
-
-    sub_types = df_monthly["資産サブタイプ"].unique().tolist()
-    
-    fig = go.Figure()
-    for sub_type in sub_types:
-        df_sub = df_monthly[df_monthly['資産サブタイプ'] == sub_type].copy()
-        df_sub = df_sub.groupby('償還日')[['資産額']].sum()
-        df_sub = df_sub.reindex(all_months, fill_value=0).reset_index()
-        df_sub.rename(columns={'index': '償還日'}, inplace=True)
-        print(df_sub)
-        fig.add_trace(go.Bar(
-            x = df_sub['償還日'].dt.strftime("%y/%m").tolist(),
-            y=df_sub['資産額'].astype(int).tolist(),
-            name=sub_type,
-            #marker_color=sub_type,
-            #customdata=df_sub['資産サブタイプ'],
-            #hovertemplate = 
-            #    '<b>%{customdata}</b>'+
-            #    '<br>Date: %{x}'+
-            #    '<br>Assets: ¥%{y:,}<extra></extra>',
-        ))
-    fig = _graph_individual_setting(fig, "償還日", "%y-%m", "償還額", "¥", "")
-    # metaでID付与
-    fig.update_layout(
-        barmode='stack',
-        meta={"id": "general_balance"}
-    )
-    fig.show()
-    
-    #fig_dict = fig.to_dict()
-    #json_str = json.dumps(fig_dict)
-    #return json_str
-
 def _build_liquidity_horizon(df_collection_latest, df_asset_attribute, df_asset_sub_type_attribute):
-    # 資産名-資産サブタイプ-償還日-資産額のマスターデータフレーム作成
-    df = df_asset_attribute.copy()
-    mask = df["償還日"].notna()
-    df_maturity_date = df[mask][["資産名","資産サブタイプ","償還日"]].reset_index(drop=True)
-    #print(df_maturity_date)
-    df = df_collection_latest.copy()
-    mask = df["資産名"].isin(df_maturity_date["資産名"].tolist())
-    df_assets = df[mask][["資産名","資産額"]].reset_index(drop=True)
-    #print(df_assets)
-    df_master = pd.merge(df_maturity_date.set_index("資産名"), df_assets.set_index("資産名"), on="資産名", how="left")
-    df_master.reset_index(inplace=True)
+    df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute)
     min_day = pd.to_datetime("today").normalize()
-    df_master = df_master[df_master["償還日"] <= min_day + pd.DateOffset(months=12)].reset_index(drop=True)
-    #print(df_master)
 
     # 月別のまとめてグラフ化
     df_master['償還日'] = pd.to_datetime(df_master['償還日']).dt.to_period('M').dt.to_timestamp('M')
@@ -637,6 +567,68 @@ def build_dashboard_payload(include_graphs: bool = True, include_summary: bool =
             "liquidity_horizon": _build_liquidity_horizon(df_collection_latest, df_asset_attribute, df_asset_sub_type_attribute)
         }
     return result
+
+def _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute):
+    # 資産名-資産サブタイプ-償還日-資産額のマスターデータフレーム作成
+    df = df_asset_attribute.copy()
+    mask = df["償還日"].notna()
+    df_maturity_date = df[mask][["資産名","資産サブタイプ","償還日"]].reset_index(drop=True)
+    
+    df = df_collection_latest.copy()
+    mask = df["資産名"].isin(df_maturity_date["資産名"].tolist())
+    df_assets = df[mask][["資産名","資産額"]].reset_index(drop=True)
+    
+    df_master = pd.merge(df_maturity_date.set_index("資産名"), df_assets.set_index("資産名"), on="資産名", how="left")
+    df_master.reset_index(inplace=True)
+    min_day = pd.to_datetime("today").normalize()
+    df_master = df_master[df_master["償還日"] <= min_day + pd.DateOffset(months=12)].reset_index(drop=True)
+    return df_master
+
+def get_graph_details(graph_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    # 再利用性を考慮して、graph_id で分岐
+    if graph_id == "liquidity_horizon":
+        # 必要なデータをDBから取得 (ここでは簡易的にすべて読み込むが、最適化余地あり)
+        _, df_collection_latest, _, df_asset_attribute = _read_table_from_db()
+        df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute)
+        
+        # フィルタリング
+        sub_type = params.get("sub_type")
+        if sub_type:
+            # グラフ表示名は英語、DBは日本語かもしれないため変換が必要だが
+            # _build_liquidity_horizon では先に df_master を作ってから map している。
+            # ここではシンプルに、もし params["sub_type"] が英語名で来るなら、
+            # df_asset_sub_type_attribute を使って逆変換するか、
+            # あるいは df_master 側を英語化してからフィルタする。
+            # ここでは後者(英語化してからフィルタ)を採用する。
+            
+            _, _, df_asset_sub_type_attribute, _ = _read_table_from_db()
+            jp_to_en = dict(zip(
+                df_asset_sub_type_attribute["資産タイプとサブタイプ"],
+                df_asset_sub_type_attribute["英語名"]
+            ))
+            
+            # コピーして英語化
+            df_filtered = df_master.copy()
+            df_filtered["資産サブタイプ_en"] = df_filtered["資産サブタイプ"].map(jp_to_en)
+            
+            # フィルタ
+            df_filtered = df_filtered[df_filtered["資産サブタイプ_en"] == sub_type]
+            
+            # ユーザー要望により、テーブル内の資産サブタイプは英語のままにする
+            df_filtered["資産サブタイプ"] = df_filtered["資産サブタイプ_en"]
+            
+            # 返却データ整形 (JSON Serializable に)
+            # 日付型を文字列に
+            if "償還日" in df_filtered.columns:
+                df_filtered["償還日"] = df_filtered["償還日"].dt.strftime("%Y-%m-%d")
+            
+            # 必要なカラムだけ返す
+            return {
+                "columns": ["資産名", "資産額", "償還日", "資産サブタイプ"],
+                "data": df_filtered[["資産名", "資産額", "償還日", "資産サブタイプ"]].to_dict(orient="records")
+            }
+            
+    return {"columns": [], "data": []}
 
 if __name__ == "__main__":
     import os

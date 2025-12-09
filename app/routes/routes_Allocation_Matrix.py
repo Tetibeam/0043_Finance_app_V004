@@ -1,5 +1,5 @@
-from flask import Blueprint, current_app,jsonify,make_response
-from .Allocation_Matrix_service import build_dashboard_payload
+from flask import Blueprint, current_app,jsonify,make_response, request
+from .Allocation_Matrix_service import build_dashboard_payload, get_graph_details
 from werkzeug.exceptions import InternalServerError
 import os
 
@@ -55,3 +55,27 @@ def summary():
         import traceback
         traceback.print_exc()
         raise InternalServerError(description=str(e))
+
+@Allocation_Matrix_bp.route("/details", methods=["GET"])
+def details():
+    """
+    グラフ詳細データを返すエンドポイント
+    Query Params:
+      - graph_id: グラフID (例: liquidity_horizon)
+      - sub_type: 資産サブタイプ (例: Domestic Equity) ※フィルタ用
+    """
+    try:
+        graph_id = request.args.get("graph_id")
+        sub_type = request.args.get("sub_type")
+        
+        params = {}
+        if sub_type:
+            params["sub_type"] = sub_type
+            
+        result = get_graph_details(graph_id, params)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise InternalServerError(description=str(e))
+

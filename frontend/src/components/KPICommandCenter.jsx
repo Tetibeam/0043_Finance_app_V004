@@ -29,8 +29,8 @@ function KPICommandCenter() {
     return '　 '
   }
 
-  if (loading) return <div id="dashboard-summary">読み込み中...</div>
-  if (error) return <div id="dashboard-summary">エラー: {error}</div>
+  if (loading) return <div id="dashboard-summary">Loading...</div>
+  if (error) return <div id="dashboard-summary">Error: {error}</div>
   if (!summary) return null
 
   return (

@@ -36,11 +36,11 @@ function AllocationMatrixDetails() {
   }, [graphId, subType])
 
   if (loading) {
-    return <div className="main" style={{ color: '#fff' }}>読み込み中...</div>
+    return <div className="main" style={{ color: '#fff' }}>Loading...</div>
   }
 
   if (error) {
-    return <div className="main" style={{ color: '#ff6b6b' }}>エラー: {error}</div>
+    return <div className="main" style={{ color: '#ff6b6b' }}>Error: {error}</div>
   }
 
   // Determine Japanese subtitle from data or fallback (Reverted to English/Source as requested)

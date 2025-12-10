@@ -365,6 +365,8 @@ def unify_asset_name(df):
         "霞ヶ関キャピタル edit xseven", na=False, regex=False), "資産名"] = "霞ヶ関キャピタルedit xsevenファンド#3霞ヶ関キャピタル株式会社申込完了(Funds)"
     df_unify.loc[df_unify["資産名"].str.contains(
         "VORT maximファンド#1株式会社ボルテックス正常運用中(Funds)", na=False, regex=False), "資産名"] = "VORTmaximファンド#1株式会社ボルテックス 正常運用中(Funds)"
+    df_unify.loc[df_unify["資産名"].str.contains(
+        "第一生命ホールディングス(StockPoint forCONNECT)", na=False, regex=False), "資産名"] = "第一生命ＨＤ(StockPoint forCONNECT)"
     
     return df_unify
 

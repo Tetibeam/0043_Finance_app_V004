@@ -496,48 +496,30 @@ def _build_liquidity_pyramid(df_collection, df_asset_sub_type_attribute):
 
 def _build_true_risk_exposure_flow(df_collection):
     pass
-
-def _build_liquidity_horizon(df_collection_latest, df_asset_attribute, df_asset_sub_type_attribute):
-    df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute)
-    min_day = pd.to_datetime("today").normalize()
-
-def _build_liquidity_horizon(df_collection_latest, df_asset_attribute):
+  
+def _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute):
     # 資産名 - 資産サブタイプ - 資産額 - 償還日のデータセットを作る
-    df_ref = df_asset_attribute.copy()
-    df = df_ref[df_ref["償還日"].notna()][["資産名","資産サブタイプ","償還日"]]
-    df_assets = (
-        df_collection_latest[df_collection_latest["資産名"].isin(
-            df["資産名"].tolist()
-        )][["資産名","資産額"]]
-    )
-    df.set_index("資産名", inplace=True)
-    df_assets.set_index("資産名", inplace=True)
-    df = pd.merge(df, df_assets, left_index=True, right_index=True)
-    df.reset_index(inplace=True)
+    df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute)
     
     # 償還日を月毎にする
-    date_range = pd.date_range(start=df["償還日"].min(), end=df["償還日"].max(), freq="M")
-    df.set_index("償還日", inplace=True)
-    df = df.reindex(date_range).agg({
-        "資産名": "first",
-        "資産サブタイプ": "first",
-        "資産額": "sum"
-    }).reset_index()
+    df_monthly = df_master.copy()
+    df_monthly['償還日'] = pd.to_datetime(df_monthly['償還日']).dt.to_period('M').dt.to_timestamp('M')
 
-    # 月別のまとめてグラフ化
-    df_master['償還日'] = pd.to_datetime(df_master['償還日']).dt.to_period('M').dt.to_timestamp('M')
+    # 月別にする
+    min_day = pd.to_datetime("today").normalize()
     all_months = pd.date_range(start=min_day, end=min_day + pd.DateOffset(months=12), freq="ME")
-    
+    # 資産サブタイプを英語にする
     jp_to_en = dict(zip(
         df_asset_sub_type_attribute["資産タイプとサブタイプ"],
         df_asset_sub_type_attribute["英語名"]
     ))
-    df_master["資産サブタイプ"] = df_master["資産サブタイプ"].map(jp_to_en)
-    sub_types = df_master["資産サブタイプ"].unique().tolist()
+    df_monthly["資産サブタイプ"] = df_monthly["資産サブタイプ"].map(jp_to_en)
     
+    # サブタイプごとにグラフを描く
+    sub_types = df_monthly["資産サブタイプ"].unique().tolist()
     fig = go.Figure()
     for sub_type in sub_types:
-        df_sub = df_master[df_master["資産サブタイプ"] == sub_type].copy()
+        df_sub = df_monthly[df_monthly["資産サブタイプ"] == sub_type].copy()
         df_sub = df_sub.groupby('償還日')[['資産額']].sum()
         df_sub = df_sub.reindex(all_months, fill_value=0)
         #print(df_sub)
@@ -670,4 +652,5 @@ if __name__ == "__main__":
     #_build_portfolio_efficiency_map(df_collection,df_asset_sub_type_attribute)
     #_build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute)
     #_build_true_risk_exposure_flow(df_collection)
-    #_build_liquidity_horizon(df_collection_latest, df_asset_attribute)
+    _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute)
+    #print(df)

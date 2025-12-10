@@ -496,17 +496,10 @@ def _build_liquidity_pyramid(df_collection, df_asset_sub_type_attribute):
 
 def _build_true_risk_exposure_flow(df_collection):
     pass
-<<<<<<< HEAD
 
 def _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute):
     # 資産名 - 資産サブタイプ - 資産額 - 償還日のデータセットを作る
     df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute, df_asset_sub_type_attribute)
-=======
-  
-def _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute):
-    # 資産名 - 資産サブタイプ - 資産額 - 償還日のデータセットを作る
-    df_master = _get_liquidity_horizon_data(df_collection_latest, df_asset_attribute)
->>>>>>> 2f1cbf556eea3c2d7be18c84a7e1f445255c7c64
     
     # 償還日を月毎にする
     df_monthly = df_master.copy()
@@ -516,19 +509,11 @@ def _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_s
     min_day = pd.to_datetime("today").normalize()
     all_months = pd.date_range(start=min_day, end=min_day + pd.DateOffset(months=12), freq="ME")
     # 資産サブタイプを英語にする
-<<<<<<< HEAD
     #jp_to_en = dict(zip(
     #    df_asset_sub_type_attribute["資産タイプとサブタイプ"],
     #    df_asset_sub_type_attribute["英語名"]
     #))
     #df_monthly["資産サブタイプ"] = df_monthly["資産サブタイプ"].map(jp_to_en)
-=======
-    jp_to_en = dict(zip(
-        df_asset_sub_type_attribute["資産タイプとサブタイプ"],
-        df_asset_sub_type_attribute["英語名"]
-    ))
-    df_monthly["資産サブタイプ"] = df_monthly["資産サブタイプ"].map(jp_to_en)
->>>>>>> 2f1cbf556eea3c2d7be18c84a7e1f445255c7c64
     
     # サブタイプごとにグラフを描く
     sub_types = df_monthly["資産サブタイプ"].unique().tolist()
@@ -657,10 +642,6 @@ if __name__ == "__main__":
     #_build_portfolio_efficiency_map(df_collection,df_asset_sub_type_attribute)
     #_build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute)
     #_build_true_risk_exposure_flow(df_collection)
-<<<<<<< HEAD
     #_build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute)
     get_graph_details("liquidity_horizon", {"sub_type": "Time Deposits"})
-=======
-    _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute)
->>>>>>> 2f1cbf556eea3c2d7be18c84a7e1f445255c7c64
     #print(df)

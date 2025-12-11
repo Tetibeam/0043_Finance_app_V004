@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
 import axios from 'axios'
+import Plot from 'react-plotly.js'  // 後でcomponentに
 
 function AllocationMatrixDetails() {
   const { graphId } = useParams()
   const [searchParams] = useSearchParams()
   const subType = searchParams.get('sub_type')
   
-  const [data, setData] = useState([])
+  //const [data, setData] = useState([])
+  const [figJson, setFigJson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Memoize fig parsing to ensure stable references
+  const fig = React.useMemo(() => {
+    return typeof figJson === 'string' ? JSON.parse(figJson) : figJson
+  }, [figJson])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +30,11 @@ function AllocationMatrixDetails() {
                 sub_type: subType
             }
         })
-        setData(response.data.data)
+        //setData(response.data.data)
+        setFigJson(response.data)
+        //console.log("response:", response);
+        //console.log("response.data:", response.data);
+
         setLoading(false)
       } catch (err) {
         console.error('Failed to load details:', err)
@@ -31,9 +42,14 @@ function AllocationMatrixDetails() {
         setLoading(false)
       }
     }
-
     fetchData()
   }, [graphId, subType])
+  
+  useEffect(() => {
+    const updateContainerSize = () => {
+
+    }
+  }, [])
 
   if (loading) {
     return <div className="main" style={{ color: '#fff' }}>Loading...</div>
@@ -52,43 +68,18 @@ function AllocationMatrixDetails() {
   const displayGraphName = graphId === 'liquidity_horizon' ? 'Liquidity Horizon' : graphId;
 
   return (
-    <div className="main" style={{ padding: '20px', color: '#DDDDDD' }}>
-      <h2 style={{ marginBottom: '20px' }}>
-        詳細: {displaySubType} ({displayGraphName})
-      </h2>
-      
-      {data.length === 0 ? (
-        <p>該当するデータはありません。</p>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ 
-                width: '100%', 
-                borderCollapse: 'collapse', 
-                backgroundColor: '#1E1E1E',
-                color: '#DDDDDD'
-            }}>
-                <thead>
-                    <tr style={{ borderBottom: '1px solid #444' }}>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>資産名</th>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>資産サブタイプ</th>
-                        <th style={{ padding: '10px', textAlign: 'right' }}>資産額</th>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>償還日</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((row, index) => (
-                        <tr key={index} style={{ borderBottom: '1px solid #333' }}>
-                            <td style={{ padding: '10px' }}>{row['資産名']}</td>
-                            <td style={{ padding: '10px' }}>{row['資産サブタイプ']}</td>
-                            <td style={{ padding: '10px', textAlign: 'right' }}>
-                                ¥{Number(row['資産額']).toLocaleString()}
-                            </td>
-                            <td style={{ padding: '10px' }}>{row['償還日']}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+    <div className="graph-fullscreen">
+      <div 
+        className="graph-title" 
+        dangerouslySetInnerHTML={{ __html: subType}}
+      />
+      {fig && (
+        <Plot
+          data={fig.data}
+          layout={fig.layout}
+          config={{ displayModeBar: false }}
+          style={{ width: "100%", height: "100%" }}
+        />
       )}
     </div>
   )

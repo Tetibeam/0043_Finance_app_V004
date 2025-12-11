@@ -620,7 +620,10 @@ def get_graph_details(graph_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
                 header=dict(values=list(df_filtered.columns.tolist())),
                 cells=dict(values=[df_filtered[col] for col in df_filtered.columns])
             ))
-            fig.show()
+            fig.update_layout(
+                meta={"id": "liquidity_horizon"},
+            )
+            #fig.show()
             fig_dict = fig.to_dict()
             json_str = json.dumps(fig_dict, default=str)
             return json_str
@@ -643,5 +646,5 @@ if __name__ == "__main__":
     #_build_liquidity_pyramid(df_collection,df_asset_sub_type_attribute)
     #_build_true_risk_exposure_flow(df_collection)
     #_build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_sub_type_attribute)
-    get_graph_details("liquidity_horizon", {"sub_type": "Time Deposits"})
+    print(get_graph_details("liquidity_horizon", {"sub_type": "Time Deposits"}))
     #print(df)

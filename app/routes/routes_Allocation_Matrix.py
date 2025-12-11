@@ -73,6 +73,7 @@ def details():
             params["sub_type"] = sub_type
             
         result = get_graph_details(graph_id, params)
+        #print(result)
         return jsonify(result)
     except Exception as e:
         import traceback

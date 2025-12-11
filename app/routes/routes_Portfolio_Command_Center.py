@@ -30,14 +30,8 @@ def graphs():
     """
     try:
         payload = build_dashboard_payload(include_graphs=True, include_summary=False)
-        # 200 OK
-        #resp = make_response(jsonify(payload), 200)
-        # キャッシュ挙動(必要に応じ調整)
-        #resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        
-        resp = apply_etag(payload)
-        
-        return resp
+
+        return apply_etag(payload)
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -52,12 +46,8 @@ def summary():
     """
     try:
         payload = build_dashboard_payload(include_graphs=False, include_summary=True)
-        #resp = make_response(jsonify(payload), 200)
-        #resp.headers["Cache-Control"] = "no-cache"
+        return apply_etag(payload)
         
-        resp = apply_etag(payload)
-        
-        return resp
     except Exception as e:
         import traceback
         traceback.print_exc()

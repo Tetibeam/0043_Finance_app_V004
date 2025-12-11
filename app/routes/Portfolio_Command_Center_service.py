@@ -282,7 +282,7 @@ def _build_special_balance(df_collection):
     #fig.show()
     return json_str
 
-@cache.cached(timeout=60)  # 60秒間（1分間）キャッシュを保持する
+@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
 def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
     print("--- [CACHE MISS] Running heavy calculation for build_dashboard_payload ---")
     

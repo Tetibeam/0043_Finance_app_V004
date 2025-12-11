@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../apiClient'
 import GraphContainer from '../components/GraphContainer'
 
 function AllocationMatrix() {
@@ -10,7 +10,7 @@ function AllocationMatrix() {
   useEffect(() => {
     const fetchGraphs = async () => {
       try {
-        const response = await axios.get('/api/Allocation_Matrix/graphs')
+        const response = await apiClient.get('/Allocation_Matrix/graphs')
         setGraphs(response.data.graphs)
         setLoading(false)
       } catch (err) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../apiClient'
 import Plot from 'react-plotly.js'  // 後でcomponentに
 
 function AllocationMatrixDetails() {
@@ -8,12 +8,10 @@ function AllocationMatrixDetails() {
   const [searchParams] = useSearchParams()
   const subType = searchParams.get('sub_type')
   
-  //const [data, setData] = useState([])
   const [figJson, setFigJson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Memoize fig parsing to ensure stable references
   const fig = React.useMemo(() => {
     return typeof figJson === 'string' ? JSON.parse(figJson) : figJson
   }, [figJson])
@@ -24,17 +22,13 @@ function AllocationMatrixDetails() {
         
       try {
         setLoading(true)
-        const response = await axios.get('/api/Allocation_Matrix/details', {
+        const response = await apiClient.get('/Allocation_Matrix/details', {
             params: {
                 graph_id: graphId,
                 sub_type: subType
             }
         })
-        //setData(response.data.data)
         setFigJson(response.data)
-        //console.log("response:", response);
-        //console.log("response.data:", response.data);
-
         setLoading(false)
       } catch (err) {
         console.error('Failed to load details:', err)

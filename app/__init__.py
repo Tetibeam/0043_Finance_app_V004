@@ -10,6 +10,8 @@ cache = Cache()
 
 def create_app():
     app = Flask(__name__)
+    
+    #キャッシュの設定
     cache_config = {
         # Redisをバックエンドに使用
         "CACHE_TYPE": "redis",

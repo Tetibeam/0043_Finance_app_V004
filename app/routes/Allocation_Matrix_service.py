@@ -12,6 +12,7 @@ import plotly.io as pio
 import json
 
 from app.utils.dashboard_utility import make_vector, graph_individual_setting
+from app import cache
 
 def _read_table_from_db():
     # 12か月前の月初を計算
@@ -480,7 +481,11 @@ def _build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_asset_s
     json_str = json.dumps(fig_dict, default=str)
     return json_str
 
+@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
 def build_dashboard_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
+
+    print("--- [CACHE MISS] Running heavy calculation for build_dashboard_payload ---")
+    
     # DBから必要データを読み込みます
     df_collection, df_collection_latest, df_asset_sub_type_attribute, df_asset_attribute  = _read_table_from_db()
 
@@ -525,7 +530,11 @@ def _get_liquidity_horizon_master_data(df_collection_latest, df_asset_attribute,
     
     return df_master
 
+@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
 def get_graph_details(graph_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
+
+    print("--- [CACHE MISS] Running heavy calculation for build_dashboard_payload ---")
+
     # 再利用性を考慮して、graph_id で分岐
     if graph_id == "liquidity_horizon":
         # 必要なデータをDBから取得 (ここでは簡易的にすべて読み込むが、最適化余地あり)

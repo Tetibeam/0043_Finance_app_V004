@@ -79,7 +79,7 @@ def get_liquidity_horizon_master_data(df_collection_latest, df_asset_attribute, 
     # 資産サブタイプを英語にする
     df_master["資産サブタイプ"] = df_master["資産サブタイプ"].map(
        dict(zip(
-        df_asset_sub_type_attribute["資産タイプとサブタイプ"],
+        df_asset_sub_type_attribute["項目"],
         df_asset_sub_type_attribute["英語名"]
         ))
     )

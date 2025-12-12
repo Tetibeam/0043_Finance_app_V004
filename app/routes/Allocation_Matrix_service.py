@@ -219,22 +219,22 @@ def _build_liquidity_pyramid(df_collection, df_asset_sub_type_attribute):
     tiers = [
         {'name': 'Tier 4: Long-Term / Illiquid Assets (Defined Contribution etc.)','color': '#5AB4EA',
         'value': df[df["資産サブタイプ"].isin(
-            df_ref[df_ref["流動性"] == "非流動性資産"]["資産タイプとサブタイプ"].tolist()
+            df_ref[df_ref["流動性"] == "非流動性資産"]["項目"].tolist()
         )]["資産額"].sum().astype(int) },
 
         {'name': 'Tier 3: Committed / Frictional Capital (Investment Trust etc.)',
         'value': df[df["資産サブタイプ"].isin(
-            df_ref[df_ref["流動性"] == "市場性有価証券"]["資産タイプとサブタイプ"].tolist()
+            df_ref[df_ref["流動性"] == "市場性有価証券"]["項目"].tolist()
         )]["資産額"].sum().astype(int), 'color': '#377EB8'},
         
         {'name': 'Tier 2: Accessible Investment Buffer (Time Deposits etc.)',
         'value': df[df["資産サブタイプ"].isin(
-            df_ref[df_ref["流動性"] == "市場確実性資産"]["資産タイプとサブタイプ"].tolist()
+            df_ref[df_ref["流動性"] == "市場確実性資産"]["項目"].tolist()
         )]["資産額"].sum().astype(int), 'color': '#1F4E79'},
         
         {'name': 'Tier 1: Immediate Defense Capital (Cash Reserves etc.)',
         'value': df[df["資産サブタイプ"].isin(
-            df_ref[df_ref["流動性"] == "即時流動性資産"]["資産タイプとサブタイプ"].tolist()
+            df_ref[df_ref["流動性"] == "即時流動性資産"]["項目"].tolist()
         )]["資産額"].sum().astype(int), 'color': '#002D62'}
     ]
     total_assets = sum(t['value'] for t in tiers)

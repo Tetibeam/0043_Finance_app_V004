@@ -14,7 +14,7 @@ def cal_sharpe_ratio(
     df_ref = df_asset_sub_type_attribute.copy()
     df_ref["リスク"] = df_ref["リスク"].astype(float)
     annualized_volatility = df_ref.loc[
-        df_ref["資産タイプとサブタイプ"] == sub_type, "リスク"
+        df_ref["項目"] == sub_type, "リスク"
     ].values[0]
     if np.isnan(annualized_volatility):
         df_tmp=pd.DataFrame()

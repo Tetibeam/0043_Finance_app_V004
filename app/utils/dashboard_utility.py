@@ -70,6 +70,6 @@ def graph_individual_setting(fig, x_title, x_tickformat, y_title, y_tickprefix, 
 
 def get_map_jp_to_en_sub_type(df_asset_sub_type_attribute):
     return dict(zip(
-        df_asset_sub_type_attribute["資産タイプとサブタイプ"],
+        df_asset_sub_type_attribute["項目"],
         df_asset_sub_type_attribute["英語名"]
     ))

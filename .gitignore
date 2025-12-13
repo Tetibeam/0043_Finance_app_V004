@@ -26,6 +26,8 @@ database/
 .env           # APIキーや秘密情報
 .vscode/       # VSCode設定
 .src.egg-info/  # パッケージ情報
+.env.*.local
+
 
 # ============================
 # Docker / PostgreSQL / node

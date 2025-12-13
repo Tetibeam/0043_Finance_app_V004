@@ -99,5 +99,5 @@ if __name__ == "__main__":
     init_db(base_dir)
 
     df_balance, df_item_attribute, df_emergency_buffer = read_table_from_db()
-    print(_build_summary(df_balance,df_emergency_buffer))
+    #print(_build_summary(df_balance,df_emergency_buffer))
     #print(build_Cashflow_Analytics_payload(include_graphs=False, include_summary=True))

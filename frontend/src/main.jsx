@@ -4,6 +4,13 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './styles/style.css'
 
+if (import.meta.env.DEV && import.meta.env.VITE_USE_MSW === 'true') {
+  const { worker } = await import('./mocks/browser')
+  worker.start({
+    onUnhandledRequest: 'warn',
+  })
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

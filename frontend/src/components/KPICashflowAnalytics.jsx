@@ -21,6 +21,13 @@ function KPICashflowAnalytics() {
 
     fetchSummary()
   }, [])
+  
+  const getVectorIcon = (vector) => {
+    if (vector === 1) return '👆 '
+    if (vector === -1) return '👇 '
+    if (vector === 0) return '👉 '
+    return '　 '
+  }
 
   if (loading) return <div id="dashboard-summary">Loading...</div>
   if (error) return <div id="dashboard-summary">Error: {error}</div>
@@ -49,16 +56,23 @@ function KPICashflowAnalytics() {
       
       <div className="summary-grid">
         <div>Date:</div>
-        <div>{summary.latest_date}</div>
+        <div style={{marginLeft: '1.2vw'}}>{summary.latest_date}</div>
         
         <div>Fire Progress - 3mo:</div>
-        <div>{summary['Fire Progress-3m'].toLocaleString()}%</div>
+        <div>{getVectorIcon(summary['Fire Progress-3m_vector'])}
+          {summary['Fire Progress-3m'].toLocaleString()}%</div>
         
         <div>Net Saving - 3mo:</div>
-        <div>¥ {summary['Net Saving-3m'].toLocaleString()}</div>
+        <div>{getVectorIcon(summary['Net Saving-3m_vector'])}
+          ¥ {summary['Net Saving-3m'].toLocaleString()}</div>
         
         <div>Saving Rate - 3mo:</div>
-        <div>{summary['Saving Rate-3m'].toLocaleString()}%</div>
+        <div>{getVectorIcon(summary['Saving Rate-3m_vector'])}
+          {summary['Saving Rate-3m'].toLocaleString()}%</div>
+
+        <div>Financial Runway:</div>
+        <div>{getVectorIcon(summary['Financial Runway_vector'])}
+          {summary['Financial Runway'].toLocaleString()}</div>
       </div>
     </div>
   )

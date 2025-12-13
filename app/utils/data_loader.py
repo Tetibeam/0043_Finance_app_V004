@@ -67,9 +67,18 @@ def query_table_aggregated(
     # フィルタリング
     if filters:
         for i, (col, val) in enumerate(filters.items()):
-            param_name = f"param_{i}"
-            where_clauses.append(f"{col} = :{param_name}")
-            params[param_name] = val
+            if isinstance(val, (list, tuple)):
+                placeholders = []
+                for j, v in enumerate(val):
+                    pname = f"param_{i}_{j}"
+                    placeholders.append(f":{pname}")
+                    params[pname] = v
+                where_clauses.append(f"{col} IN ({', '.join(placeholders)})")
+            else:
+                param_name = f"param_{i}"
+                where_clauses.append(f"{col} = :{param_name}")
+                params[param_name] = val
+
     # WHERE句を組み立てる
     if where_clauses:
         sql += " WHERE " + " AND ".join(where_clauses)

@@ -59,20 +59,20 @@ function KPICashflowAnalytics() {
         <div style={{marginLeft: '1.2vw'}}>{summary.latest_date}</div>
         
         <div>Fire Progress - 3mo:</div>
-        <div>{getVectorIcon(summary['Fire Progress-3m_vector'])}
-          {summary['Fire Progress-3m'].toLocaleString()}%</div>
+        <div>{getVectorIcon(summary['fire_progress_3m_vector'])}
+          {summary['fire_progress_3m'].toLocaleString()}%</div>
         
         <div>Net Saving - 3mo:</div>
-        <div>{getVectorIcon(summary['Net Saving-3m_vector'])}
-          ¥ {summary['Net Saving-3m'].toLocaleString()}</div>
+        <div>{getVectorIcon(summary['net_saving_3m_vector'])}
+          ¥ {summary['net_saving_3m'].toLocaleString()}</div>
         
         <div>Saving Rate - 3mo:</div>
-        <div>{getVectorIcon(summary['Saving Rate-3m_vector'])}
-          {summary['Saving Rate-3m'].toLocaleString()}%</div>
+        <div>{getVectorIcon(summary['saving_rate_3m_vector'])}
+          {summary['saving_rate_3m'].toLocaleString()}%</div>
 
         <div>Financial Runway:</div>
-        <div>{getVectorIcon(summary['Financial Runway_vector'])}
-          {summary['Financial Runway'].toLocaleString()}</div>
+        <div>{getVectorIcon(summary['financial_runway_vector'])}
+          {summary['financial_runway'].toLocaleString()}</div>
       </div>
     </div>
   )

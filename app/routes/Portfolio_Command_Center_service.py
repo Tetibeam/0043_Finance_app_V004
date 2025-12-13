@@ -317,7 +317,9 @@ if __name__ == "__main__":
     from app.utils.db_manager import init_db
     init_db(base_dir)
     df = _read_table_from_db()
-    print(_build_summary(df))
+
+    print(build_PCC_payload(include_graphs=False, include_summary=True))
+    
     #_build_progress_rate(df)
     #_build_saving_rate(df)
     #_build_total_assets(df)

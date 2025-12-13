@@ -58,14 +58,14 @@ def _build_summary(df_balance, df_emergency_buffer):
     latest_str = latest.strftime("%y/%m/%d")
     return {
         "latest_date": latest_str,
-        "Fire Progress-3m": round(fire_progress_current*100,1),
-        "Fire Progress-3m_vector": make_vector(fire_progress_current, fire_progress_past),
-        "Net Saving-3m": round(net_saving_current),
-        "Net Saving-3m_vector": make_vector(net_saving_current, net_saving_past),
-        "Saving Rate-3m": round(saving_rate_current*100,1),
-        "Saving Rate-3m_vector": make_vector(saving_rate_current, saving_rate_past),
-        "Financial Runway": str(round(financial_runway_current)) + " months",
-        "Financial Runway_vector": make_vector(financial_runway_current, financial_runway_past),
+        "fire_progress_3m": round(fire_progress_current*100,1),
+        "fire_progress_3m_vector": make_vector(fire_progress_current, fire_progress_past),
+        "net_saving_3m": round(net_saving_current),
+        "net_saving_3m_vector": make_vector(net_saving_current, net_saving_past),
+        "saving_rate_3m": round(saving_rate_current*100,1),
+        "saving_rate_3m_vector": make_vector(saving_rate_current, saving_rate_past),
+        "financial_runway": str(round(financial_runway_current)) + " months",
+        "financial_runway_vector": make_vector(financial_runway_current, financial_runway_past),
     }
 
 def build_Cashflow_Analytics_payload(include_graphs=False, include_summary=False):
@@ -99,5 +99,5 @@ if __name__ == "__main__":
     init_db(base_dir)
 
     df_balance, df_item_attribute, df_emergency_buffer = read_table_from_db()
-    #print(_build_summary(df_balance,df_emergency_buffer))
+    print(_build_summary(df_balance,df_emergency_buffer))
     #print(build_Cashflow_Analytics_payload(include_graphs=False, include_summary=True))

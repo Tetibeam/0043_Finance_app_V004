@@ -50,7 +50,7 @@ function AllocationMatrix() {
   if (error) {
     return <div className="main"><div>Error: {error}</div></div>
   }
-
+ 
   /* New: Handler for plot clicks */
   const handlePlotClick = (data, graphKey) => {
     // Only target 'liquidity_horizon' as requested

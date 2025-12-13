@@ -22,6 +22,9 @@ function KPIAllocationMatrix() {
     fetchSummary()
   }, [])
 
+
+
+
   const getVectorIcon = (vector) => {
     if (vector === 1) return '👆 '
     if (vector === -1) return '👇 '
@@ -33,6 +36,7 @@ function KPIAllocationMatrix() {
   if (error) return <div id="dashboard-summary">Error: {error}</div>
   if (!summary) return null
 
+  
   return (
     <div id="dashboard-summary">
       <div style={{

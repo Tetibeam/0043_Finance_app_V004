@@ -373,7 +373,7 @@ def _build_liquidity_horizon(df_collection_latest, df_asset_attribute, df_item_a
     json_str = json.dumps(fig_dict, default=str)
     return json_str
 
-@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
+#@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
 def build_Allocation_Matrix_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
 
     print("--- [CACHE MISS] Running heavy calculation for build_Allocation_Matrix_payload ---")
@@ -414,10 +414,12 @@ if __name__ == "__main__":
     from app.utils.db_manager import init_db
     init_db(base_dir)
     df_collection, df_collection_latest, df_item_attribute, df_asset_attribute = read_table_from_db()
+    #print(build_Allocation_Matrix_payload(include_graphs=False, include_summary=True))
+    
     #print(_build_summary(df_collection))
     #_build_asset_tree_map(df_collection,df_item_attribute)
     #_build_target_deviation(df_collection)
-    _build_portfolio_efficiency_map(df_collection,df_item_attribute)
+    #_build_portfolio_efficiency_map(df_collection,df_item_attribute)
     #_build_liquidity_pyramid(df_collection,df_item_attribute)
     #_build_true_risk_exposure_flow(df_collection)
     #_build_liquidity_horizon(df_collection_latest, df_asset_attribute,df_item_attribute)

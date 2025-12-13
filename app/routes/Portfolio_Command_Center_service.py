@@ -11,7 +11,12 @@ import plotly.io as pio
 import json
 from app import cache
 
-from app.utils.dashboard_utility import make_vector, graph_individual_setting
+from app.utils.dashboard_utility import (
+    make_vector,
+    graph_individual_setting,
+    make_graph_template
+)
+
 
 def _read_table_from_db():
     # 12か月前の月初を計算
@@ -291,6 +296,8 @@ def build_PCC_payload(include_graphs: bool = True, include_summary: bool = True)
     #print(df_target)
 
     result = {"ok":True, "summary": {}, "graphs": {}}
+
+    make_graph_template()
 
     if include_summary:
         result["summary"] = _build_summary(df_collection)

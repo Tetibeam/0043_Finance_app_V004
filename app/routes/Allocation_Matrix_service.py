@@ -4,6 +4,7 @@ from app.utils.data_loader import (
     get_raw_table
 )
 from typing import Dict, Any
+from app.utils.dashboard_utility import make_graph_template
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -373,7 +374,7 @@ def _build_liquidity_horizon(df_collection_latest, df_asset_attribute, df_item_a
     json_str = json.dumps(fig_dict, default=str)
     return json_str
 
-#@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
+@cache.cached(timeout=300)  # 300秒間（5分間）キャッシュを保持する
 def build_Allocation_Matrix_payload(include_graphs: bool = True, include_summary: bool = True) -> Dict[str, Any]:
 
     print("--- [CACHE MISS] Running heavy calculation for build_Allocation_Matrix_payload ---")
@@ -383,6 +384,8 @@ def build_Allocation_Matrix_payload(include_graphs: bool = True, include_summary
 
     result = {"ok":True, "summary": {}, "graphs": {}}
 
+    make_graph_template()
+    
     if include_summary:
         result["summary"] = _build_summary(df_collection)
         

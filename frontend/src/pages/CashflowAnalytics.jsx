@@ -26,7 +26,7 @@ function CashflowAnalytics() {
   // グラフの表示順
   const graphOrder = [
     'target_trajectory',
-    //'target_deviation',
+    'goal_imbalance_map',
     //'portfolio_efficiency_map',
     //'liquidity_pyramid',
     //'true_risk_exposure_flow',
@@ -36,7 +36,7 @@ function CashflowAnalytics() {
   // グラフタイトルのマッピング
   const graphTitles = {
     'target_trajectory': "<span><img src='/static/icon/star.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Target Trajectory</span>",
-    //'target_deviation': "<span><img src='/static/icon/sail.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Target Deviation</span>",
+    'goal_imbalance_map': "<span><img src='/static/icon/sail.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> Goal Imbalance Map</span>",
     //'portfolio_efficiency_map': "<span><img src='/static/icon/compass.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Portfolio Efficiency Map</span>",
     //'liquidity_pyramid': "<span><img src='/static/icon/line-chart.svg' style='height:20px; margin-right:6px; opacity:0.85;'/> Liquidity Pyramid</span>",
     //'true_risk_exposure_flow': "<span><img src='/static/icon/waves.svg' style='height:18px; margin-right:6px; opacity:0.85;'/> True Risk Exposure Flow</span>",

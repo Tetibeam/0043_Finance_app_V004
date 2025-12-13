@@ -49,8 +49,7 @@ def make_graph_template():
                 xanchor="right",
                 x=1,
             ),
-            colorway=["#4E79A7", "#F28E2B"],
-            
+            colorway = ["#4DA3FF", "#FF6A3D", "#1F5FFF", "#C43A2F"]
         )
     )
     pio.templates["dark_dashboard"] = theme
